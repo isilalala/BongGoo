@@ -1,4 +1,4 @@
-# 🪄 BongGoo — Rent Your Lightstick, Light Up Your Concert Experience!
+# 🌟BongGoo — Rent Your Lightstick, Light Up Your Concert Experience!
 
 ## Getting Started
 
