@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🪄 BongGoo — Rent Your Lightstick, Light Up Your Concert Experience!
 
 ## Getting Started
 
