@@ -1,5 +1,5 @@
 ## 📖 Overview
-**BongBoo** adalah platform persewaan *lightstick* konser modern berbasis web yang dirancang khusus untuk memenuhi kebutuhan *fandom* K-Pop. BongBoo hadir sebagai solusi hemat dan praktis bagi para penonton konser yang ingin tetap menikmati atmosfer *lightstick ocean* tanpa harus membeli unit baru dengan harga mahal. Nama **BongGoo** berasal dari gabungan kata **"Bong"** (*lightstick*) dan **"Goo"** (*go*/jalan/sewa). Rent Your Lightstick, Light Up Your Concert Experience!
+**BongGoo** adalah platform persewaan *lightstick* konser modern berbasis web yang dirancang khusus untuk memenuhi kebutuhan para *penggemar* K-Pop. BongGoo hadir sebagai solusi hemat dan praktis bagi para penonton konser yang ingin tetap menikmati atmosfer *lightstick ocean* tanpa harus membeli unit baru dengan harga mahal. Nama **BongGoo** berasal dari gabungan kata **"Bong"** (*lightstick*) dan **"Goo"** (*go*/jalan/sewa). Rent Your Lightstick, Light Up Your Concert Experience!
 
 ## 🚀 Fitur Utama (Features)
 
