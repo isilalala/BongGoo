@@ -2,7 +2,7 @@
 
 **BongGoo** adalah platform web peminjaman *lightstick* K-Pop yang praktis dan terjangkau. Nama **BongGoo** berasal dari gabungan kata **"Bong"** (*lightstick*) dan **"Goo"** (*go*/jalan/sewa). BongGoo hadir sebagai solusi bagi penggemar K-Pop yang ingin menikmati *vibe* dan atmosfer konser secara maksimal tanpa harus membeli *lightstick* mahal yang mungkin hanya digunakan sekali atau dua kali.
 
-## 🚀 Fitur Utama (Features)
+# 🚀 Fitur Utama (Features)
 
 ### 1. 🔐 Authentication (Sistem Akun)
 - **Register & Login:** Akses masuk menggunakan Email & Password.
