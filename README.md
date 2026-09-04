@@ -7,7 +7,7 @@
 - **Register & Login:** Akses masuk menggunakan Email & Password.
 - **Role Akun:** 
   - 👤 **User:** Peminjam *lightstick*.
-  - 👑 **Admin:** Pengelola data dan persetujuan peminjaman.
+  - 👥 **Admin:** Pengelola data dan persetujuan peminjaman.
 
 ### 2. 💖 Katalog & Pengajuan Peminjaman
 - **Katalog Lightstick:** Memilih *lightstick* berdasarkan grup K-Pop yang ingin dipilih beserta foto, nama unit, dan rincian harga.
