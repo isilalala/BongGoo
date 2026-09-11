@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHanged</title>
+    <link rel="stylesheet" href="tes.css">
+</head>
+<body>
+    <section class="counter">  
+        <h1 id="judul ini">Counter</h1>
+        <p id="nilai">0</p>
+        <button id="tombol1">-</button>
+        <button id="tombol2">Reset</button>
+        <button id="tombol3">+</button>
+    </section>
+    
+    <script>
+        teks = document.getElementById("judul ini");
+        nilai = document.getElementById("nilai");
+        min = document.getElementById("tombol1");
+        rst = document.getElementById("tombol2");
+        plus = document.getElementById("tombol3");
+
+        min.onclick = () => {
+            nilai.textContent--;
+        }
+
+        rst.onclick = () => {
+            nilai.textContent = 0;
+        }
+
+        plus.onclick = () => {
+            nilai.textContent++;
+        }
+    </script>
+</body>
+</html>
