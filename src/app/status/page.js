@@ -21,10 +21,16 @@ export default function StatusPage() {
   ];
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-blue-500 mb-1">Status Peminjaman Saya</h1>
-      <p className="text-sm text-gray-400 mb-6">Pantau persetujuan dan riwayat peminjaman lightstick kamu.</p>
-
+    <div className="w-full min-h-screen fixed inset-0 -z-10 bg-linear-to-r from-pink-500 via-purple-500 to-indigo-600 text-white pt-12 md:pt-16 pb-12 px-4 flex flex-col">
+      <div className="max-w-4xl mx-auto w-full pt-10 text-center">
+        {/* Judul & Deskripsi */}
+        <h1 className="text-2xl md:text-3xl font-extrabold text-blue-100 drop-shadow-md mb-2">
+          Status Peminjaman Saya
+        </h1>
+        <p className="text-xs md:text-sm text-white mb-8">
+          Pantau persetujuan dan riwayat peminjaman lightstick kamu.
+        </p>
+      </div>
       <div className="space-y-4">
         {userRentals.map((rental) => (
           <div
