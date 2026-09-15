@@ -13,27 +13,80 @@ export default function LoginPage() {
   const [loginId, setLoginId] = useState("");
   const [loginUser, setLoginUser] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
+  // State Form Daftar
+  const [regNama, setRegNama] = useState("");
+  const [regUsername, setRegUsername] = useState("");
+  const [regHp, setRegHp] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regNik, setRegNik] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+
+  // State Pop-up Sukses Registrasi (Menampilkan ID baru)
+  const [generatedId, setGeneratedId] = useState(null);
+
+  // Data Dummy Admin untuk Validasi
+  const ADMIN_ID = "BG-ADMIN-01";
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "admin123";
+
+  // --- HANDLER LOGIN ---
   const handleLogin = (e) => {
     e.preventDefault();
-    if (loginUser.toLowerCase() === "admin") {
+    setErrorMsg("");
+
+    const formattedId = loginId.trim().toUpperCase();
+    const formattedUser = loginUser.trim().toLowerCase();
+
+    // 1. Cek Login Admin
+    if (
+      (formattedId === ADMIN_ID || formattedUser === ADMIN_USER) &&
+      loginPassword === ADMIN_PASS
+    ) {
       localStorage.setItem("userRole", "admin");
-    } else {
-      localStorage.setItem("userRole", "user");
+      localStorage.setItem("userId", ADMIN_ID);
+      alert("Berhasil masuk sebagai Admin!");
+      router.push("/approval"); // Otomatis ke halaman Approval Admin
+      return;
     }
-    alert(`Berhasil masuk!`);
-    router.push("/");
+
+    // 2. Cek Login User Biasa (Simulasi)
+    if (formattedId.startsWith("BG-") && loginPassword.length >= 4) {
+      localStorage.setItem("userRole", "user");
+      localStorage.setItem("userId", formattedId);
+      alert(`Berhasil masuk! Selamat datang, ${loginUser}.`);
+      router.push("/");
+      return;
+    }
+
+    // 3. Jika Validasi Gagal
+    setErrorMsg("ID / Username / Password salah! (Admin: BG-ADMIN-01 / admin / admin123)");
   };
 
+  // --- HANDLER REGISTRASI ---
   const handleRegister = (e) => {
     e.preventDefault();
-    alert("Pendaftaran berhasil! Silakan masuk ke akun Anda.");
+
+    // Generate ID unik otomatis untuk User baru
+    const randomNum = Math.floor(10000 + Math.random() * 90000);
+    const newId = `BG-26-${randomNum}`;
+
+    // Tampilkan ID baru ke user melalui pop-up modal
+    setGeneratedId(newId);
+  };
+
+  // Tutup Modal ID dan Pindah ke Tab Login
+  const handleCloseIdModal = () => {
+    setLoginId(generatedId);
+    setLoginUser(regUsername);
+    setGeneratedId(null);
     setActiveTab("masuk");
   };
 
   return (
     <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center">
-        <div 
+      <div
         className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: "url('/fandom-kpop.jpg')" }}
       />
@@ -60,7 +113,10 @@ export default function LoginPage() {
         <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 mb-6">
           <button
             type="button"
-            onClick={() => setActiveTab("masuk")}
+            onClick={() => {
+              setActiveTab("masuk");
+              setErrorMsg("");
+            }}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "masuk"
                 ? "bg-white text-pink-600 shadow-sm"
@@ -71,7 +127,10 @@ export default function LoginPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("daftar")}
+            onClick={() => {
+              setActiveTab("daftar");
+              setErrorMsg("");
+            }}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "daftar"
                 ? "bg-white text-pink-600 shadow-sm"
@@ -85,6 +144,12 @@ export default function LoginPage() {
         {/* --- FORM MASUK --- */}
         {activeTab === "masuk" && (
           <form onSubmit={handleLogin} className="space-y-4">
+            {errorMsg && (
+              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl border border-red-100 font-medium">
+                {errorMsg}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 ID <span className="text-pink-600">*</span>
@@ -95,7 +160,7 @@ export default function LoginPage() {
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
                 placeholder="CONTOH: BG-26-89412 ATAU BG-ADMIN-01"
-                className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
+                className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold uppercase focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
               />
             </div>
 
@@ -146,6 +211,8 @@ export default function LoginPage() {
               <input
                 type="text"
                 required
+                value={regNama}
+                onChange={(e) => setRegNama(e.target.value)}
                 placeholder="Nama sesuai KTP"
                 className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
               />
@@ -159,6 +226,8 @@ export default function LoginPage() {
                 <input
                   type="text"
                   required
+                  value={regUsername}
+                  onChange={(e) => setRegUsername(e.target.value)}
                   placeholder="username"
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
                 />
@@ -170,6 +239,8 @@ export default function LoginPage() {
                 <input
                   type="text"
                   required
+                  value={regHp}
+                  onChange={(e) => setRegHp(e.target.value)}
                   placeholder="0812xxxxxxxx"
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
                 />
@@ -183,6 +254,8 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
                 placeholder="email@domain.com"
                 className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
               />
@@ -195,7 +268,23 @@ export default function LoginPage() {
               <input
                 type="text"
                 required
+                value={regNik}
+                onChange={(e) => setRegNik(e.target.value)}
                 placeholder="16 digit NIK"
+                className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="••••••••"
                 className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
               />
             </div>
@@ -207,6 +296,7 @@ export default function LoginPage() {
               <input
                 type="file"
                 required
+                accept="image/*"
                 className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100 cursor-pointer"
               />
             </div>
@@ -217,6 +307,37 @@ export default function LoginPage() {
           </form>
         )}
       </div>
+
+      {/* --- MODAL INFROMASI ID BARU USER --- */}
+      {generatedId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl border border-gray-100">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-xl">
+              ✓
+            </div>
+            <h3 className="text-lg font-bold text-gray-800">Pendaftaran Berhasil!</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Simpan ID kamu berikut untuk keperluan login ke aplikasi BongGoo:
+            </p>
+
+            <div className="my-4 p-3 bg-pink-50 border border-pink-200 rounded-2xl">
+              <span className="text-xs text-pink-600 font-semibold uppercase block">ID Pengguna Kamu</span>
+              <span className="text-xl font-extrabold text-pink-700 tracking-wider font-mono">
+                {generatedId}
+              </span>
+            </div>
+
+            <Button
+              variant="primary"
+              size="md"
+              fullWidth
+              onClick={handleCloseIdModal}
+            >
+              Lanjut ke Login
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

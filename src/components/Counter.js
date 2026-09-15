@@ -29,7 +29,7 @@ export default function Counter({ initialValue = 1, onChange }) {
       >
         -
       </button>
-      <span className="font-bold text-sm min-w-5 text-center">{count}</span>
+      <span className="font-bold text-sm text-gray-950 min-w-5 text-center">{count}</span>
       <button
         type="button"
         onClick={handleIncrement}

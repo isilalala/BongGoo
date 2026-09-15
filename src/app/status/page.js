@@ -22,8 +22,8 @@ export default function StatusPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">Status Peminjaman Saya</h1>
-      <p className="text-sm text-gray-500 mb-6">Pantau persetujuan dan riwayat peminjaman lightstick kamu.</p>
+      <h1 className="text-2xl font-bold text-blue-500 mb-1">Status Peminjaman Saya</h1>
+      <p className="text-sm text-gray-400 mb-6">Pantau persetujuan dan riwayat peminjaman lightstick kamu.</p>
 
       <div className="space-y-4">
         {userRentals.map((rental) => (
@@ -36,7 +36,7 @@ export default function StatusPage() {
                 <span className="text-[10px] font-bold bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">
                   {rental.group}
                 </span>
-                <span className="text-xs text-gray-400">ID: {rental.id}</span>
+                <span className="text-xs text-gray-500">ID: {rental.id}</span>
               </div>
               <h2 className="font-bold text-gray-800 text-lg">{rental.item}</h2>
               <p className="text-xs text-gray-500 mt-1">📅 {rental.date}</p>
