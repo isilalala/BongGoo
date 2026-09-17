@@ -42,10 +42,10 @@ export default function ApprovalPage() {
     <div className="max-w-5xl mx-auto p-6 md:p-8">
       {/* 1. JUDUL & DESKRIPSI */}
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-blue-600 mb-2">
           Dashboard Approval Peminjaman
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-white">
           Kelola dan beri persetujuan untuk pengajuan peminjaman lightstick.
         </p>
       </div>
@@ -53,20 +53,20 @@ export default function ApprovalPage() {
       {/* 2. STAT CARDS RINGKASAN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
             Total Masuk
           </p>
           <p className="text-2xl font-bold text-gray-900">12</p>
         </div>
 
-        <div className="bg-amber-50/50 p-5 rounded-xl border border-amber-200 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm">
           <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">
             Menunggu
           </p>
           <p className="text-2xl font-bold text-amber-600">3</p>
         </div>
 
-        <div className="bg-emerald-50/50 p-5 rounded-xl border border-emerald-200 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm">
           <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-1">
             Disetujui
           </p>
@@ -76,7 +76,7 @@ export default function ApprovalPage() {
 
       {/* 3. DAFTAR PENGAJUAN MASUK */}
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-gray-800">Daftar Pengajuan Masuk</h2>
+        <h2 className="text-lg font-bold text-blue-800">Daftar Pengajuan Masuk</h2>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
