@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import Counter from "@/components/Counter";
-import Button from "@/components/Button";
-import { lightsticks } from "@/data/dataLightstick";
+import Counter from "../../components/Counter";
+import Button from "../../components/Button";
+import { lightsticks } from "../../data/dataLightstick";
 
 export default function PeminjamanPage() {
   const [selectedLightstickId, setSelectedLightstickId] = useState("A1");

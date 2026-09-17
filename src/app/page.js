@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import Hero from "@/components/Hero";
-import Card from "@/components/Card";
-import Button from "@/components/Button";
-import { groups, lightsticks } from "@/data/dataLightstick";
+import Hero from "../components/Hero";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import { groups, lightsticks } from "../data/dataLightstick";
 
 export default function HomePage() {
   // State untuk menyimpan ID grup yang dipilih (null artinya belum ada grup yang diklik)

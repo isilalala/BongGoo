@@ -1,5 +1,5 @@
 // app/status/page.js
-import Badge from "@/components/Badge";
+import Badge from "../../components/Badge";
 
 export default function StatusPage() {
   // Data dummy riwayat pengajuan peminjaman user

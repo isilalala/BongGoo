@@ -1,4 +1,4 @@
-import Badge from "@/components/Badge";
+import Badge from "../components/Badge";
 
 export default function Card({ item, groupName }) {
   return (
