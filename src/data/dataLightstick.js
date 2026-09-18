@@ -5,7 +5,7 @@ export const groups = [
   {
     id: "A",
     name: "BTS",
-    logo: "/BTS.jpg", // Logo grup BTS
+    logo: "/group/BTS.jpg", // Logo grup BTS
     badgeColor: "bg-purple-100 text-purple-700 border-purple-200",
   },
   {
