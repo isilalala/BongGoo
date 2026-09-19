@@ -25,6 +25,102 @@ export const groups = [
     name: "BLACKPINK",
     logo: "/group/BLACKPINK.jpg", // Logo grup BLACKPINK
     badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "E",
+    name: "TWICE",
+    logo: "/group/TWICE.jpg", // Logo grup TWICE
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "F",
+    name: "BABYMON",
+    logo: "/group/BABYMON.jpg", // Logo grup BABYMON
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "G",
+    name: "BIGBANG",
+    logo: "/group/BIGBANG.jpg", // Logo grup BIGBANG
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "H",
+    name: "CORTIS",
+    logo: "/group/CORTIS.jpg", // Logo grup CORTIS
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "I",
+    name: "ENHYPEN",
+    logo: "/group/ENHYPEN.jpg", // Logo grup ENHYPEN
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "J",
+    name: "EXO",
+    logo: "/group/EXO.jpg", // Logo grup EXO
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "K",
+    name: "H2H",
+    logo: "/group/H2H.jpg", // Logo grup H2H
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "L",
+    name: "IKON",
+    logo: "/group/IKON.jpg", // Logo grup IKON
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "M",
+    name: "IVE",
+    logo: "/group/IVE.jpg", // Logo grup IVE
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "N",
+    name: "LNGSHOT",
+    logo: "/group/LNGSHOT.jpg", // Logo grup LNGSHOT
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "O",
+    name: "NEWJEANS",
+    logo: "/group/NEWJEANS.jpg", // Logo grup NEWJEANS
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "P",
+    name: "REDVELVET",
+    logo: "/group/REDVELVET.jpg", // Logo grup REDVELVET
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "Q",
+    name: "SHINEE",
+    logo: "/group/SHINEE.jpg", // Logo grup SHINEE
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "R",
+    name: "SNSD",
+    logo: "/group/SNSD.jpg", // Logo grup SNSD
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "S",
+    name: "TREASURE",
+    logo: "/group/TREASURE.jpg", // Logo grup TREASURE
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+  {
+    id: "T",
+    name: "TXT",
+    logo: "/group/TXT.jpg", // Logo grup TXT
+    badgeColor: "bg-pink-100 text-pink-700 border-pink-200",
   }
  
 ];
