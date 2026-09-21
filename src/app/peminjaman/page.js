@@ -36,14 +36,14 @@ export default function PeminjamanPage() {
     // 2. Buat objek data pengajuan baru
     const newRequest = {
       id: `REQ-${Math.floor(100 + Math.random() * 900)}`,
-      username: username, // Penting: Menyimpan username pengaju
+      username: username, // Menyimpan username pengaju
       itemName: selectedItem.name,
       groupName: selectedItem.category || selectedItem.group || "K-POP",
       startDate: startDate,
       days: days,
       eventName: eventName,
       totalBiaya: totalBiaya,
-      status: "PENDING", // Status awal saat baru mengajukan
+      status: "Pending", // 👈 Disamakan dengan Badge & Status Page ("Pending")
       createdAt: new Date().toISOString(),
     };
 
@@ -51,10 +51,12 @@ export default function PeminjamanPage() {
     const existingRequests = JSON.parse(
       localStorage.getItem("borrowRequests") || "[]"
     );
-    localStorage.setItem(
-      "borrowRequests",
-      JSON.stringify([newRequest, ...existingRequests])
-    );
+    
+    const updatedRequests = [newRequest, ...existingRequests];
+    localStorage.setItem("borrowRequests", JSON.stringify(updatedRequests));
+
+    // 👈 Trigger event agar halaman lain/tab admin langsung membaca perubahan data
+    window.dispatchEvent(new Event("storage"));
 
     alert("Pengajuan peminjaman berhasil dikirim!");
 
@@ -63,7 +65,7 @@ export default function PeminjamanPage() {
   };
 
   return (
-    <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center">
+    <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center font-sans">
       <div
         className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: "url('/fandom-kpop.jpg')" }}
