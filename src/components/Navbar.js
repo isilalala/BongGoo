@@ -123,7 +123,7 @@ export default function Navbar() {
                   pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
                 }`}
               >
-                Status
+                Approval
               </Link>
               <Link
                 href="/approval"
@@ -131,7 +131,7 @@ export default function Navbar() {
                   pathname === "/approval" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
                 }`}
               >
-                Approval
+                Admin
               </Link>
             </>
           )}
