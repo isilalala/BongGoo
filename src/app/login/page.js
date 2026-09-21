@@ -9,16 +9,24 @@ export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("masuk");
 
+  // State Login
   const [loginUser, setLoginUser] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [showLoginPass, setShowLoginPass] = useState(false);
 
+  // State Register
   const [regNama, setRegNama] = useState("");
   const [regUsername, setRegUsername] = useState("");
   const [regHp, setRegHp] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regNik, setRegNik] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+
+  // Toggle Password Visibility
+  const [showRegPass, setShowRegPass] = useState(false);
+  const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
 
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
 
@@ -38,38 +46,29 @@ export default function LoginPage() {
       (formattedUser === ADMIN_USER || formattedUser === ADMIN_EMAIL) &&
       loginPassword === ADMIN_PASS
     ) {
-      // Simpan credentials admin ke localStorage
       localStorage.setItem("userRole", "admin");
-      localStorage.setItem("authToken", "token-admin-123"); // Ditambahkan agar Navbar mendeteksi login
+      localStorage.setItem("authToken", "token-admin-123");
       localStorage.setItem(
         "user",
         JSON.stringify({ username: "admin", role: "admin" })
       );
 
-      // Trigger custom event untuk Navbar
       window.dispatchEvent(new Event("authChange"));
-
-      // Arahkan & refresh halaman ke Dashboard Approval Admin
       router.push("/approval");
-      router.refresh();
       return;
     }
 
     // 2. Validasi User Biasa
     if (formattedUser && loginPassword.length >= 4) {
       localStorage.setItem("userRole", "user");
-      localStorage.setItem("authToken", `token-${loginUser}`); // Ditambahkan untuk user biasa
+      localStorage.setItem("authToken", `token-${loginUser}`);
       localStorage.setItem(
         "user",
         JSON.stringify({ username: loginUser, role: "user" })
       );
 
-      // Trigger custom event untuk Navbar
       window.dispatchEvent(new Event("authChange"));
-
-      // Diarahkan ke Beranda
       router.push("/");
-      router.refresh();
       return;
     } else {
       setErrorMsg("Username/Email atau Password tidak valid!");
@@ -77,8 +76,38 @@ export default function LoginPage() {
     }
   };
 
+  // --- HANDLER REGISTER DENGAN VALIDASI STRATA ---
   const handleRegister = (e) => {
     e.preventDefault();
+    setErrorMsg("");
+
+    // Validasi No. HP (10 - 13 digit angka)
+    const hpRegex = /^[0-9]{10,13}$/;
+    if (!hpRegex.test(regHp)) {
+      setErrorMsg("Nomor HP/WA tidak valid! Harus berupa angka 10-13 digit.");
+      return;
+    }
+
+    // Validasi NIK (persis 16 digit angka)
+    const nikRegex = /^[0-9]{16}$/;
+    if (!nikRegex.test(regNik)) {
+      setErrorMsg("NIK tidak valid! Harus tepat 16 digit angka.");
+      return;
+    }
+
+    // Validasi Panjang Password
+    if (regPassword.length < 6) {
+      setErrorMsg("Password minimal 6 karakter!");
+      return;
+    }
+
+    // Validasi Kesesuaian Password & Konfirmasi Password
+    if (regPassword !== regConfirmPassword) {
+      setErrorMsg("Konfirmasi password tidak cocok dengan password!");
+      return;
+    }
+
+    // Jika semua validasi lolos
     setIsRegisterSuccess(true);
   };
 
@@ -111,6 +140,7 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* TAB NAVIGATION */}
         <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 mb-6">
           <button
             type="button"
@@ -142,6 +172,7 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* FORM MASUK */}
         {activeTab === "masuk" && (
           <form onSubmit={handleLogin} className="space-y-4">
             {errorMsg && (
@@ -168,14 +199,23 @@ export default function LoginPage() {
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 Password <span className="text-pink-600">*</span>
               </label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
-              />
+              <div className="relative">
+                <input
+                  type={showLoginPass ? "text" : "password"}
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPass(!showLoginPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                >
+                  {showLoginPass ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -190,11 +230,18 @@ export default function LoginPage() {
           </form>
         )}
 
+        {/* FORM DAFTAR */}
         {activeTab === "daftar" && (
           <form
             onSubmit={handleRegister}
-            className="space-y-3.5 max-h-90 overflow-y-auto pr-1"
+            className="space-y-3.5 max-h-96 overflow-y-auto pr-1"
           >
+            {errorMsg && (
+              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl border border-red-100 font-medium">
+                {errorMsg}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 Nama Lengkap
@@ -231,8 +278,9 @@ export default function LoginPage() {
                   type="text"
                   required
                   value={regHp}
-                  onChange={(e) => setRegHp(e.target.value)}
-                  placeholder="0812xxxxxxxx"
+                  onChange={(e) => setRegHp(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="0812xxxxxxxx (10-13 digit)"
+                  maxLength={13}
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
                 />
               </div>
@@ -254,30 +302,65 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
-                NIK
+                NIK (16 Digit)
               </label>
               <input
                 type="text"
                 required
                 value={regNik}
-                onChange={(e) => setRegNik(e.target.value)}
-                placeholder="16 digit NIK"
+                onChange={(e) => setRegNik(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="Masukkan 16 digit NIK"
+                maxLength={16}
                 className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
               />
             </div>
 
+            {/* FIELD PASSWORD & TOGGLE LIHAT */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
-              />
+              <div className="relative">
+                <input
+                  type={showRegPass ? "text" : "password"}
+                  required
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegPass(!showRegPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                >
+                  {showRegPass ? "🙈" : "👁️"}
+                </button>
+              </div>
+            </div>
+
+            {/* FIELD KONFIRMASI PASSWORD */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Konfirmasi Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showRegConfirmPass ? "text" : "password"}
+                  required
+                  value={regConfirmPassword}
+                  onChange={(e) => setRegConfirmPassword(e.target.value)}
+                  placeholder="Ulangi password di atas"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegConfirmPass(!showRegConfirmPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                >
+                  {showRegConfirmPass ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
 
             <div>
@@ -305,6 +388,7 @@ export default function LoginPage() {
         )}
       </div>
 
+      {/* MODAL SUCCESS */}
       {isRegisterSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl border border-gray-100">
