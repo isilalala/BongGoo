@@ -2,13 +2,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Counter from "../../components/Counter";
 import Button from "../../components/Button";
 import { lightsticks } from "../../data/dataLightstick";
 
 export default function PeminjamanPage() {
+  const router = useRouter();
+
   const [selectedLightstickId, setSelectedLightstickId] = useState("A1");
   const [days, setDays] = useState(1);
+  const [startDate, setStartDate] = useState("");
+  const [eventName, setEventName] = useState("");
 
   // Ambil detail item terpilih
   const selectedItem =
@@ -23,15 +28,46 @@ export default function PeminjamanPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Pengajuan peminjaman berhasil dikirim! Silakan cek di halaman Status.");
+
+    // 1. Ambil data akun yang sedang login dari localStorage
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const username = currentUser.username || currentUser.name || "User";
+
+    // 2. Buat objek data pengajuan baru
+    const newRequest = {
+      id: `REQ-${Math.floor(100 + Math.random() * 900)}`,
+      username: username, // Penting: Menyimpan username pengaju
+      itemName: selectedItem.name,
+      groupName: selectedItem.category || selectedItem.group || "K-POP",
+      startDate: startDate,
+      days: days,
+      eventName: eventName,
+      totalBiaya: totalBiaya,
+      status: "PENDING", // Status awal saat baru mengajukan
+      createdAt: new Date().toISOString(),
+    };
+
+    // 3. Simpan ke array 'borrowRequests' di localStorage
+    const existingRequests = JSON.parse(
+      localStorage.getItem("borrowRequests") || "[]"
+    );
+    localStorage.setItem(
+      "borrowRequests",
+      JSON.stringify([newRequest, ...existingRequests])
+    );
+
+    alert("Pengajuan peminjaman berhasil dikirim!");
+
+    // 4. Arahkan pengguna ke halaman Status
+    router.push("/status");
   };
 
   return (
     <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center">
-        <div 
+      <div
         className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: "url('/fandom-kpop.jpg')" }}
-        />
+      />
       <div className="max-w-2xl w-full mx-auto my-6 bg-white/95 backdrop-blur-md p-8 rounded-3xl border border-gray-200 shadow-2xl">
         <h1 className="text-2xl font-bold mb-1 text-gray-800">
           Form Pengajuan Peminjaman
@@ -68,6 +104,8 @@ export default function PeminjamanPage() {
               <input
                 type="date"
                 required
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="w-full border border-gray-300 rounded-xl p-2.5 text-xs font-medium text-gray-900 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
@@ -87,6 +125,8 @@ export default function PeminjamanPage() {
             <input
               type="text"
               required
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
               placeholder="Contoh: Konser BTS World Tour Jakarta"
               className="w-full border border-gray-300 rounded-xl p-2.5 text-xs font-medium text-gray-900 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
