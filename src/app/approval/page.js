@@ -1,112 +1,233 @@
-// app/approval/page.js
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function ApprovalPage() {
-  // Simulasi role login
-  const role = "admin"; // Ganti ke "user" untuk tes proteksi
+  const [activeTab, setActiveTab] = useState("pengajuan");
+  const [timeString, setTimeString] = useState("");
 
-  // Proteksi Sederhana
-  if (role !== "admin") {
-    return (
-      <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 shadow-sm max-w-md mx-auto my-10 p-6">
-        <h1 className="text-2xl font-bold text-red-600 mb-2">Akses Ditolak! 🚫</h1>
-        <p className="text-gray-500 text-sm mb-6">
-          Halaman ini khusus untuk Admin. Kamu tidak memiliki izin untuk mengakses halaman persetujuan.
-        </p>
-      </div>
-    );
-  }
+  const [pendingRequests, setPendingRequests] = useState([
+    { id: "REQ-001", user: "User_1", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+    { id: "REQ-002", user: "User_2", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+    { id: "REQ-003", user: "User_3", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+    { id: "REQ-004", user: "User_4", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+    { id: "REQ-005", user: "User_5", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+    { id: "REQ-006", user: "User_6", item: "Lightstick NCT Neobong", price: "Rp 100.000 / 2 Hari", time: "10 Menit lalu" },
+  ]);
 
-  // Data dummy pengajuan masuk untuk Admin
-  const pendingRequests = [
-    {
-      id: "REQ-101",
-      user: "Zidny Ilma",
-      item: "Army Bomb",
-      date: "15/10/26 - 17/10/26",
-    },
-    {
-      id: "REQ-102",
-      user: "NCTzen_99",
-      item: "Neobong V2",
-      date: "18/10/26 - 19/10/26",
-    },
-    {
-      id: "REQ-103",
-      user: "Carat_Girl",
-      item: "Caratbong",
-      date: "22/10/26 - 23/10/26",
-    },
-  ];
+  // Jam Digital Real-time
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setTimeString(now.toLocaleTimeString("id-ID"));
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleApprove = (id) => {
+    setPendingRequests((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleReject = (id) => {
+    setPendingRequests((prev) => prev.filter((item) => item.id !== id));
+  };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-8">
-      {/* 1. JUDUL & DESKRIPSI */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-blue-600 mb-2">
-          Dashboard Approval Peminjaman
-        </h1>
-        <p className="text-sm text-white">
-          Kelola dan beri persetujuan untuk pengajuan peminjaman lightstick.
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#F4F5F7] p-6 md:p-8 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* 2. STAT CARDS RINGKASAN */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-            Total Masuk
-          </p>
-          <p className="text-2xl font-bold text-gray-900">12</p>
+        {/* SECTION ATAS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          
+          {/* KOLOM KIRI (Super Admin, Tanggal, Jam) */}
+          <div className="lg:col-span-4 space-y-3">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full border-2 border-pink-400 flex items-center justify-center text-pink-600 font-black text-base bg-pink-50">
+                ADM
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Super Admin</h2>
+                <p className="text-xs text-gray-400 mb-1">admin@bonggoo.com</p>
+                <span className="bg-emerald-100 text-emerald-600 text-[11px] font-bold px-2.5 py-0.5 rounded-md">
+                  Online
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
+              <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
+                TANGGAL HARI INI
+              </p>
+              <p className="text-base font-extrabold text-gray-800">
+                Senin, 21 September 2026
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex justify-between items-center">
+              <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">
+                JAM DIGITAL
+              </p>
+              <p className="text-2xl font-black text-[#FF0055] tracking-wider">
+                {timeString || "11:54:03"}
+              </p>
+            </div>
+          </div>
+
+          {/* KOLOM KANAN (Header Merah & List Admin) */}
+          <div className="lg:col-span-8 space-y-3 flex flex-col justify-between">
+            <div className="bg-[#FF0055] p-7 rounded-2xl text-white shadow-sm">
+              <h1 className="text-3xl font-black tracking-tight mb-1 uppercase">
+                ITS BONGGO ADMIN!
+              </h1>
+              <p className="text-xs opacity-90 font-medium">
+                Panel Kelola Operasional & Penyewaan Lightstick
+              </p>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">
+                Daftar Nama Admin Lainnya
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center bg-gray-50/80 px-4 py-2 rounded-xl text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                    <span className="font-bold text-gray-800">Admin 1 - Intan</span>
+                    <span className="text-gray-400">(Verifikasi KTP)</span>
+                  </div>
+                  <span className="bg-emerald-100 text-emerald-600 px-2.5 py-0.5 rounded-md font-bold text-[10px]">
+                    Online
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-50/80 px-4 py-2 rounded-xl text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                    <span className="font-bold text-gray-800">Admin 2 - Rizky</span>
+                    <span className="text-gray-400">(Kelola Stok)</span>
+                  </div>
+                  <span className="bg-gray-200 text-gray-600 px-2.5 py-0.5 rounded-md font-bold text-[10px]">
+                    Offline
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center bg-gray-50/80 px-4 py-2 rounded-xl text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                    <span className="font-bold text-gray-800">Admin 3 - Sarah</span>
+                    <span className="text-gray-400">(Customer Service)</span>
+                  </div>
+                  <span className="bg-emerald-100 text-emerald-600 px-2.5 py-0.5 rounded-md font-bold text-[10px]">
+                    Online
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm">
-          <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">
-            Menunggu
-          </p>
-          <p className="text-2xl font-bold text-amber-600">3</p>
+        {/* TAB NAVBAR */}
+        <div className="bg-white p-1.5 rounded-2xl border border-gray-100 shadow-xs flex gap-2 text-xs font-semibold">
+          <button
+            onClick={() => setActiveTab("pengajuan")}
+            className={`px-5 py-2.5 rounded-xl transition ${
+              activeTab === "pengajuan"
+                ? "bg-[#FF0055] text-white font-bold"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            Daftar Pengajuan
+          </button>
+          <button
+            onClick={() => setActiveTab("crud")}
+            className={`px-5 py-2.5 rounded-xl transition ${
+              activeTab === "crud"
+                ? "bg-[#FF0055] text-white font-bold"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            CRUD (Kelola Produk)
+          </button>
+          <button
+            onClick={() => setActiveTab("grafik")}
+            className={`px-5 py-2.5 rounded-xl transition ${
+              activeTab === "grafik"
+                ? "bg-[#FF0055] text-white font-bold"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            Grafik Penjualan
+          </button>
+          <button
+            onClick={() => setActiveTab("pemasukan")}
+            className={`px-5 py-2.5 rounded-xl transition ${
+              activeTab === "pemasukan"
+                ? "bg-[#FF0055] text-white font-bold"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            Pemasukan (Bulanan)
+          </button>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-1">
-            Disetujui
-          </p>
-          <p className="text-2xl font-bold text-emerald-600">8</p>
-        </div>
-      </div>
+        {/* DAFTAR PENGAJUAN (GRID 4 KOLOM) */}
+        {activeTab === "pengajuan" && (
+          <div className="space-y-3 pt-1">
+            <h2 className="text-base font-bold text-gray-900">
+              Daftar Pengajuan Sewa (Masuk)
+            </h2>
 
-      {/* 3. DAFTAR PENGAJUAN MASUK */}
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-blue-800">Daftar Pengajuan Masuk</h2>
-      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {pendingRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex flex-col justify-between space-y-3"
+                >
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="bg-pink-50 text-[#FF0055] text-[10px] font-extrabold px-2 py-0.5 rounded-md">
+                        {req.id}
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        {req.time}
+                      </span>
+                    </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-[11px] font-extrabold tracking-wider">
-            <tr>
-              <th className="p-4">PEMINJAM</th>
-              <th className="p-4">BARANG</th>
-              <th className="p-4">TANGGAL PINJAM</th>
-              <th className="p-4 text-center">AKSI</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {pendingRequests.map((req) => (
-              <tr key={req.id} className="hover:bg-gray-50/80 transition">
-                <td className="p-4 font-semibold text-gray-900">{req.user}</td>
-                <td className="p-4 text-gray-700">{req.item}</td>
-                <td className="p-4 text-gray-600 text-xs font-medium">{req.date}</td>
-                <td className="p-4 flex gap-2 justify-center">
-                  <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs">
-                    Setujui
-                  </button>
-                  <button className="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs">
-                    Tolak
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <h3 className="font-bold text-xs text-gray-900">
+                      {req.user}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 mb-1">
+                      {req.item}
+                    </p>
+                    <p className="text-xs font-bold text-[#FF0055]">
+                      {req.price}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApprove(req.id)}
+                      className="flex-1 bg-[#00C853] hover:bg-emerald-600 text-white text-xs font-bold py-2 rounded-xl transition"
+                    >
+                      Setujui
+                    </button>
+                    <button
+                      onClick={() => handleReject(req.id)}
+                      className="flex-1 bg-[#FFEBF0] hover:bg-pink-200 text-[#FF0055] text-xs font-bold py-2 rounded-xl transition"
+                    >
+                      Tolak
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

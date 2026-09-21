@@ -14,27 +14,31 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState("user");
 
   useEffect(() => {
-    // Fungsi untuk cek status auth pengguna dari localStorage
     const checkAuthStatus = () => {
       const role = localStorage.getItem("userRole");
       const userStorage = localStorage.getItem("user");
+      const token = localStorage.getItem("authToken") || localStorage.getItem("token");
 
-      if (role) {
-        setIsLoggedIn(true);
-        setUserRole(role);
-
-        if (userStorage) {
-          try {
-            const parsedUser = JSON.parse(userStorage);
-            setUsername(
-              parsedUser.username || parsedUser.name || parsedUser.email || "User"
-            );
-          } catch (e) {
-            setUsername("User");
-          }
-        } else {
-          setUsername("User");
+      let currentName = "";
+      if (userStorage) {
+        try {
+          const parsedUser = JSON.parse(userStorage);
+          currentName = parsedUser.username || parsedUser.name || parsedUser.email || "";
+        } catch (e) {
+          currentName = "";
         }
+      }
+
+      // Deteksi otomatis jika akun adalah Admin
+      const isAdminAccount = 
+        role === "admin" || 
+        currentName.toUpperCase().includes("ADMIN") || 
+        (userStorage && userStorage.toUpperCase().includes("ADMIN"));
+
+      if (role || token || currentName) {
+        setIsLoggedIn(true);
+        setUsername(currentName || "User");
+        setUserRole(isAdminAccount ? "admin" : "user");
       } else {
         setIsLoggedIn(false);
         setUsername("");
@@ -42,30 +46,29 @@ export default function Navbar() {
       }
     };
 
-    // Jalankan pertama kali saat komponen di-mount
     checkAuthStatus();
 
-    // Listener event authChange
     window.addEventListener("authChange", checkAuthStatus);
+    window.addEventListener("storage", checkAuthStatus);
     return () => {
       window.removeEventListener("authChange", checkAuthStatus);
+      window.removeEventListener("storage", checkAuthStatus);
     };
   }, []);
 
-  // Handler Logout
   const handleLogout = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
 
     setIsLoggedIn(false);
     setUsername("");
+    setUserRole("user");
 
-    // Trigger update status auth
     window.dispatchEvent(new Event("authChange"));
 
-    // Navigasi ke Landing Page
     router.push("/");
   };
 
@@ -89,43 +92,52 @@ export default function Navbar() {
             Beranda
           </Link>
 
-          {/* Menu Peminjaman & Status HANYA TAMPIL Jika Sudah Login */}
-          {isLoggedIn && (
+          {/* Menu Khusus USER BIASA (Peminjaman & Status) */}
+          {isLoggedIn && userRole !== "admin" && (
             <>
-              {userRole === "admin" ? (
-                <Link
-                  href="/approval"
-                  className={`transition ${
-                    pathname === "/approval" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
-                  }`}
-                >
-                  Persetujuan Peminjaman
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/peminjaman"
-                    className={`transition ${
-                      pathname === "/peminjaman" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
-                    }`}
-                  >
-                    Peminjaman
-                  </Link>
-                  <Link
-                    href="/status"
-                    className={`transition ${
-                      pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
-                    }`}
-                  >
-                    Status
-                  </Link>
-                </>
-              )}
+              <Link
+                href="/peminjaman"
+                className={`transition ${
+                  pathname === "/peminjaman" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                }`}
+              >
+                Peminjaman
+              </Link>
+              <Link
+                href="/status"
+                className={`transition ${
+                  pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                }`}
+              >
+                Status
+              </Link>
+            </>
+          )}
+
+          {/* Menu Khusus ADMIN (Status & Approval) */}
+          {isLoggedIn && userRole === "admin" && (
+            <>
+              <Link
+                href="/status"
+                className={`transition ${
+                  pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                }`}
+              >
+                Status
+              </Link>
+              <Link
+                href="/approval"
+                className={`transition ${
+                  pathname === "/approval" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                }`}
+              >
+                Approval
+              </Link>
             </>
           )}
         </div>
 
-        {/* BAGIAN KANAN: LOGIN / PROFILE & LOGOUT */}
+        {/* BAGIAN KANAN: PROFILE & LOGOUT */}
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <div className="flex items-center gap-3 bg-pink-50/60 border border-pink-100 px-3.5 py-1.5 rounded-full">

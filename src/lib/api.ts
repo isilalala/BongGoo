@@ -1,5 +1,4 @@
 // lib/api.ts
-import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://hmif.if.unram.ac.id/api/v2';
 const PROJECT = process.env.NEXT_PUBLIC_PROJECT_ID || 'bonggoo';
@@ -9,12 +8,10 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${BASE_URL}/${PROJECT}${cleanEndpoint}`;
 
+  // Ambil token dari localStorage jika dipanggil di Client Component (browser)
   let bearerToken = '';
-  try {
-    const cookieStore = await cookies();
-    bearerToken = cookieStore.get('session_token')?.value || '';
-  } catch (e) {
-    // Dipanggil dari Client Component
+  if (typeof window !== 'undefined') {
+    bearerToken = localStorage.getItem('authToken') || localStorage.getItem('session_token') || '';
   }
 
   const headers: Record<string, string> = {

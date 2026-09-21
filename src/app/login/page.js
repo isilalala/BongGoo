@@ -38,24 +38,38 @@ export default function LoginPage() {
       (formattedUser === ADMIN_USER || formattedUser === ADMIN_EMAIL) &&
       loginPassword === ADMIN_PASS
     ) {
+      // Simpan credentials admin ke localStorage
       localStorage.setItem("userRole", "admin");
-      localStorage.setItem("user", JSON.stringify({ username: "admin", role: "admin" }));
-      
+      localStorage.setItem("authToken", "token-admin-123"); // Ditambahkan agar Navbar mendeteksi login
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username: "admin", role: "admin" })
+      );
+
+      // Trigger custom event untuk Navbar
       window.dispatchEvent(new Event("authChange"));
-      
-      router.push("/approval"); // Admin diarahkan ke approval
+
+      // Arahkan & refresh halaman ke Dashboard Approval Admin
+      router.push("/approval");
+      router.refresh();
       return;
     }
 
     // 2. Validasi User Biasa
     if (formattedUser && loginPassword.length >= 4) {
       localStorage.setItem("userRole", "user");
-      localStorage.setItem("user", JSON.stringify({ username: loginUser, role: "user" }));
-      
+      localStorage.setItem("authToken", `token-${loginUser}`); // Ditambahkan untuk user biasa
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username: loginUser, role: "user" })
+      );
+
+      // Trigger custom event untuk Navbar
       window.dispatchEvent(new Event("authChange"));
 
-      // Diarahkan langsung ke Beranda sesuai permintaan
-      router.push("/"); 
+      // Diarahkan ke Beranda
+      router.push("/");
+      router.refresh();
       return;
     } else {
       setErrorMsg("Username/Email atau Password tidak valid!");
