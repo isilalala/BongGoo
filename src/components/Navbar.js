@@ -2,63 +2,88 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api"; // Path helper API kamu
 
 export default function Navbar() {
-  // 1. Buat state dinamis untuk status login dan role
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState("");
+  const [hasOrders, setHasOrders] = useState(false); // State untuk mengecek apakah user punya pesanan
 
-  // 2. Baca token dan role dari localStorage saat browser memuat komponen
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const userRole = localStorage.getItem("userRole");
+    async function checkAuthAndOrders() {
+      const token = localStorage.getItem("authToken");
+      const userRole = localStorage.getItem("userRole");
 
-    if (token) {
-      setIsLoggedIn(true);
-      setRole(userRole || "user");
-    } else {
-      setIsLoggedIn(false);
-      setRole("");
+      if (token) {
+        setIsLoggedIn(true);
+        setRole(userRole || "user");
+
+        // Cek ke API apakah user punya pesanan aktif/peminjaman
+        try {
+          const orders = await apiFetch("/rentals"); // atau endpoint /orders sesuai Swagger
+          // Jika ada data pesanan (length > 0), setHasOrders(true)
+          if (Array.isArray(orders) && orders.length > 0) {
+            setHasOrders(true);
+          } else {
+            setHasOrders(false);
+          }
+        } catch (err) {
+          console.error("Gagal mengecek status pesanan:", err);
+          setHasOrders(false);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setRole("");
+        setHasOrders(false);
+      }
     }
+
+    checkAuthAndOrders();
   }, []);
 
-  // 3. Fungsi Logout untuk menghapus data di localStorage
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
     setIsLoggedIn(false);
     setRole("");
-    window.location.href = "/login"; // Kembalikan ke halaman login
+    setHasOrders(false);
+    
+    router.push("/login");
+    router.refresh();
   };
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
         
-        {/* 1. Logo Aplikasi (Kiri) */}
+        {/* 1. Logo Aplikasi */}
         <Link href="/" className="font-extrabold text-xl text-pink-600 tracking-wide">
           BongGoo 💖
         </Link>
 
-        {/* 2. Navigasi Menu Utama (Tengah) */}
+        {/* 2. Navigasi Menu Utama */}
         <div className="flex gap-6 items-center text-sm font-medium text-gray-600">
           <Link href="/" className="hover:text-pink-600 transition">
             Beranda
           </Link>
 
-          {/* Menu Peminjaman & Status HANYA tampil jika user SUDAH LOGIN */}
+          {/* Menu Peminjaman: Muncul jika SUDAH LOGIN */}
           {isLoggedIn && (
-            <>
-              <Link href="/peminjaman" className="hover:text-pink-600 transition">
-                Peminjaman
-              </Link>
-              <Link href="/status" className="hover:text-pink-600 transition">
-                Status
-              </Link>
-            </>
+            <Link href="/peminjaman" className="hover:text-pink-600 transition">
+              Peminjaman
+            </Link>
           )}
 
-          {/* Menu Khusus Admin (Hanya tampil jika role = "admin") */}
+          {/* Menu Status: HANYA muncul jika SUDAH LOGIN & PUNYA PESANAN */}
+          {isLoggedIn && hasOrders && (
+            <Link href="/status" className="hover:text-pink-600 transition">
+              Status
+            </Link>
+          )}
+
+          {/* Menu Khusus Admin */}
           {isLoggedIn && role === "admin" && (
             <Link
               href="/approval"
@@ -69,7 +94,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* 3. Tombol Akun / Login (Kanan) */}
+        {/* 3. Tombol Akun / Login */}
         <div>
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
