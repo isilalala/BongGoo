@@ -1,6 +1,25 @@
+// src/components/Card.js
+"use client";
+
+import { useRouter } from "next/navigation";
 import Badge from "../components/Badge";
 
 export default function Card({ item, groupName }) {
+  const router = useRouter();
+
+  const handleAjukanPinjam = () => {
+    // Cek apakah user sudah login di localStorage
+    const userRole = localStorage.getItem("userRole");
+
+    if (userRole) {
+      // Jika SUDAH login -> arahkan langsung ke halaman Peminjaman
+      router.push("/peminjaman");
+    } else {
+      // Jika BELUM login -> arahkan ke halaman Login
+      router.push("/login");
+    }
+  };
+
   return (
     <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between text-center">
       <div>
@@ -29,12 +48,13 @@ export default function Card({ item, groupName }) {
       </div>
 
       {/* Tombol Ajukan Pinjam */}
-      <a
-        href="/login"
-        className="block w-full bg-pink-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-pink-700 transition"
+      <button
+        type="button"
+        onClick={handleAjukanPinjam}
+        className="block w-full bg-pink-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-pink-700 transition cursor-pointer"
       >
         Ajukan Pinjam
-      </a>
+      </button>
     </div>
   );
 }

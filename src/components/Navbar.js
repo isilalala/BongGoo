@@ -1,117 +1,149 @@
+// src/components/Navbar.js
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api"; // Path helper API kamu
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const router = useRouter();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [role, setRole] = useState("");
-  const [hasOrders, setHasOrders] = useState(false); // State untuk mengecek apakah user punya pesanan
+  const [username, setUsername] = useState("");
+  const [userRole, setUserRole] = useState("user");
 
   useEffect(() => {
-    async function checkAuthAndOrders() {
-      const token = localStorage.getItem("authToken");
-      const userRole = localStorage.getItem("userRole");
+    // Fungsi untuk cek status auth pengguna dari localStorage
+    const checkAuthStatus = () => {
+      const role = localStorage.getItem("userRole");
+      const userStorage = localStorage.getItem("user");
 
-      if (token) {
+      if (role) {
         setIsLoggedIn(true);
-        setRole(userRole || "user");
+        setUserRole(role);
 
-        // Cek ke API apakah user punya pesanan aktif/peminjaman
-        try {
-          const orders = await apiFetch("/rentals"); // atau endpoint /orders sesuai Swagger
-          // Jika ada data pesanan (length > 0), setHasOrders(true)
-          if (Array.isArray(orders) && orders.length > 0) {
-            setHasOrders(true);
-          } else {
-            setHasOrders(false);
+        if (userStorage) {
+          try {
+            const parsedUser = JSON.parse(userStorage);
+            setUsername(
+              parsedUser.username || parsedUser.name || parsedUser.email || "User"
+            );
+          } catch (e) {
+            setUsername("User");
           }
-        } catch (err) {
-          console.error("Gagal mengecek status pesanan:", err);
-          setHasOrders(false);
+        } else {
+          setUsername("User");
         }
       } else {
         setIsLoggedIn(false);
-        setRole("");
-        setHasOrders(false);
+        setUsername("");
+        setUserRole("user");
       }
-    }
+    };
 
-    checkAuthAndOrders();
+    // Jalankan pertama kali saat komponen di-mount
+    checkAuthStatus();
+
+    // Listener event authChange
+    window.addEventListener("authChange", checkAuthStatus);
+    return () => {
+      window.removeEventListener("authChange", checkAuthStatus);
+    };
   }, []);
 
+  // Handler Logout
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+
     setIsLoggedIn(false);
-    setRole("");
-    setHasOrders(false);
-    
-    router.push("/login");
-    router.refresh();
+    setUsername("");
+
+    // Trigger update status auth
+    window.dispatchEvent(new Event("authChange"));
+
+    // Navigasi ke Landing Page
+    router.push("/");
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <nav className="w-full bg-white border-b border-gray-100 shadow-xs sticky top-0 z-40">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         
-        {/* 1. Logo Aplikasi */}
-        <Link href="/" className="font-extrabold text-xl text-pink-600 tracking-wide">
-          BongGoo 💖
+        {/* LOGO BONGGOO */}
+        <Link href="/" className="flex items-center gap-1.5 text-2xl font-black text-pink-600 tracking-tight">
+          BongGoo <span className="text-pink-500">💖</span>
         </Link>
 
-        {/* 2. Navigasi Menu Utama */}
-        <div className="flex gap-6 items-center text-sm font-medium text-gray-600">
-          <Link href="/" className="hover:text-pink-600 transition">
+        {/* MENU NAVIGASI TENGAH */}
+        <div className="flex items-center gap-8 text-xs font-bold text-gray-500">
+          <Link
+            href="/"
+            className={`transition ${
+              pathname === "/" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+            }`}
+          >
             Beranda
           </Link>
 
-          {/* Menu Peminjaman: Muncul jika SUDAH LOGIN */}
+          {/* Menu Peminjaman & Status HANYA TAMPIL Jika Sudah Login */}
           {isLoggedIn && (
-            <Link href="/peminjaman" className="hover:text-pink-600 transition">
-              Peminjaman
-            </Link>
-          )}
-
-          {/* Menu Status: HANYA muncul jika SUDAH LOGIN & PUNYA PESANAN */}
-          {isLoggedIn && hasOrders && (
-            <Link href="/status" className="hover:text-pink-600 transition">
-              Status
-            </Link>
-          )}
-
-          {/* Menu Khusus Admin */}
-          {isLoggedIn && role === "admin" && (
-            <Link
-              href="/approval"
-              className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold border border-purple-200 hover:bg-purple-200 transition"
-            >
-              Approval
-            </Link>
+            <>
+              {userRole === "admin" ? (
+                <Link
+                  href="/approval"
+                  className={`transition ${
+                    pathname === "/approval" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                  }`}
+                >
+                  Persetujuan Peminjaman
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/peminjaman"
+                    className={`transition ${
+                      pathname === "/peminjaman" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                    }`}
+                  >
+                    Peminjaman
+                  </Link>
+                  <Link
+                    href="/status"
+                    className={`transition ${
+                      pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+                    }`}
+                  >
+                    Status
+                  </Link>
+                </>
+              )}
+            </>
           )}
         </div>
 
-        {/* 3. Tombol Akun / Login */}
-        <div>
+        {/* BAGIAN KANAN: LOGIN / PROFILE & LOGOUT */}
+        <div className="flex items-center gap-3">
           {isLoggedIn ? (
-            <div className="flex items-center gap-3">
-              <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-semibold">
-                {role.toUpperCase()}
+            <div className="flex items-center gap-3 bg-pink-50/60 border border-pink-100 px-3.5 py-1.5 rounded-full">
+              <span className="text-xs font-bold text-pink-700 flex items-center gap-1">
+                👤 {username}
               </span>
+              <span className="text-gray-300">|</span>
               <button
                 onClick={handleLogout}
-                className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                className="text-xs font-bold text-red-500 hover:text-red-700 transition cursor-pointer"
               >
-                Keluar / Logout
+                Keluar
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="bg-pink-600 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-pink-700 transition shadow-sm"
+              className="bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs px-5 py-2.5 rounded-full shadow-sm transition"
             >
               Masuk / Login
             </Link>
