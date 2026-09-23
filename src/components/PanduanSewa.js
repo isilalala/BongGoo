@@ -48,19 +48,18 @@ export default function HowToAndFAQ() {
   ];
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 space-y-16">
-        
-        {/* ================= POIN 2: ALUR PEMINJAMAN ================= */}
-        <div>
+    <div className="mt-12">
+      {/* ================= SECTION 1: CARA PEMINJAMAN (DARK MODE) ================= */}
+      <section className="py-16 border-gray-800">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="text-pink-600 font-bold text-sm tracking-wider uppercase">
+            <span className="text-pink-500 font-bold text-xs tracking-wider uppercase">
               Proses Mudah
             </span>
-            <h2 className="text-3xl font-extrabold text-gray-900 mt-1">
+            <h2 className="text-3xl font-extrabold text-white mt-1">
               Cara Peminjaman di BongGoo
             </h2>
-            <p className="text-gray-600 mt-2 text-sm">
+            <p className="text-gray-400 mt-2 text-sm">
               4 langkah praktis untuk sewa lightstick impianmu tanpa ribet.
             </p>
           </div>
@@ -69,61 +68,71 @@ export default function HowToAndFAQ() {
             {steps.map((step) => (
               <div
                 key={step.no}
-                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative hover:shadow-md transition"
+                className="bg-gray-900/80 p-6 rounded-2xl border border-gray-800 relative hover:border-pink-500/50 transition"
               >
-                <span className="text-xs font-black text-pink-500 bg-pink-50 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-black text-pink-400 bg-pink-950/60 border border-pink-800/40 px-2.5 py-1 rounded-full">
                   Langkah {step.no}
                 </span>
                 <div className="text-4xl my-3">{step.icon}</div>
-                <h3 className="font-bold text-lg text-gray-800">{step.title}</h3>
-                <p className="text-gray-600 text-xs mt-2 leading-relaxed">
+                <h3 className="font-bold text-lg text-white">{step.title}</h3>
+                <p className="text-gray-400 text-xs mt-2 leading-relaxed">
                   {step.desc}
                 </p>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* ================= POIN 3: SYARAT SEWA & FAQ ================= */}
-        <div className="bg-white border border-pink-100 rounded-3xl p-8 shadow-sm">
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <span className="text-pink-600 font-bold text-sm tracking-wider uppercase">
-              Pertanyaan Umum
-            </span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-1">
-              Syarat Sewa & Ketentuan
-            </h2>
-          </div>
+      {/* ================= SECTION 2: SYARAT & KETENTUAN (SOFT ACCENT) ================= */}
+      <section className="py-16 border-gray-800">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="bg-white border border-pink-100 rounded-3xl p-8 shadow-sm">
+            <div className="text-center max-w-2xl mx-auto mb-8">
+              <span className="text-pink-600 font-bold text-xs tracking-wider uppercase">
+                Pertanyaan Umum
+              </span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-1">
+                Syarat Sewa & Ketentuan
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {faqs.map((item, idx) => (
-              <div key={idx} className="bg-pink-50/50 p-5 rounded-2xl border border-pink-100/60">
-                <h3 className="font-bold text-gray-900 text-sm flex items-start gap-2">
-                  <span className="text-pink-600">❓</span> {item.q}
-                </h3>
-                <p className="text-gray-600 text-xs mt-2 pl-6 leading-relaxed">
-                  {item.a}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {faqs.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-pink-50/50 p-5 rounded-2xl border border-pink-100/60"
+                >
+                  <h3 className="font-bold text-gray-900 text-sm flex items-start gap-2">
+                    <span className="text-pink-600">❓</span> {item.q}
+                  </h3>
+                  <p className="text-gray-600 text-xs mt-2 pl-6 leading-relaxed">
+                    {item.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Banner Kontak Admin */}
+            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+              <div>
+                <p className="font-bold text-gray-800 text-sm">
+                  Masih ada pertanyaan lain?
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Hubungi admin untuk tanya lokasi atau detail pengambilan.
                 </p>
               </div>
-            ))}
-          </div>
-
-          {/* Banner Kontak Bantuan Singkat */}
-          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div>
-              <p className="font-bold text-gray-800 text-sm">Masih ada pertanyaan lain?</p>
-              <p className="text-gray-500 text-xs">Hubungi admin untuk tanya lokasi atau detail pengambilan.</p>
+              <Link
+                href="/kontak"
+                className="inline-block bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold px-5 py-2.5 rounded-full transition shadow-sm"
+              >
+                Hubungi Kontak Admin →
+              </Link>
             </div>
-            <Link
-              href="/kontak"
-              className="inline-block bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold px-5 py-2.5 rounded-full transition shadow-sm"
-            >
-              Hubungi Kontak Admin →
-            </Link>
           </div>
         </div>
-
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

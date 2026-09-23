@@ -92,7 +92,7 @@ export default function HomePage() {
       <div ref={lightstickSectionRef} className="scroll-mt-6">
         {selectedGroupId && (
           <div className="flex flex-col gap-4 mt-6">
-            <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+            <div className="flex items-center gap-2 border-gray-800 pb-3">
               <h3 className="text-xl font-bold text-white">
                 Koleksi Lightstick {activeGroup?.name}
               </h3>
