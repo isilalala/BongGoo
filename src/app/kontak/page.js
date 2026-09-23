@@ -6,8 +6,8 @@ export default function KontakPage(){
        <div className="mx-auto max-w-4xl px-4 py-10">
       {/* Header Halaman */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-900">Hubungi Kami & Lokasi Pengambilan</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-blue-900">Hubungi Kami & Lokasi Pengambilan</h1>
+        <p className="text-gray-400 mt-2">
           Sudah mengajukan peminjaman? Silakan hubungi admin atau datang langsung ke lokasi kami untuk pengambilan barang.
         </p>
       </div>
