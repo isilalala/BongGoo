@@ -5,6 +5,7 @@ import { useState, useRef } from "react";
 import Card from "../components/Card";
 import { groups, lightsticks } from "../data/dataLightstick";
 import Hero from "../components/Hero";
+import PanduanSewa from "../components/PanduanSewa";
 
 export default function HomePage() {
   const [selectedGroupId, setSelectedGroupId] = useState(groups[0]?.id || null);

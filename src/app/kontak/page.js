@@ -6,8 +6,8 @@ export default function KontakPage(){
        <div className="mx-auto max-w-4xl px-4 py-10">
       {/* Header Halaman */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-blue-900">Hubungi Kami & Lokasi Pengambilan</h1>
-        <p className="text-gray-400 mt-2">
+        <h1 className="text-3xl font-bold text-blue-500">Kontak Kami & Lokasi Pengambilan</h1>
+        <p className="text-gray-300 mt-2">
           Sudah mengajukan peminjaman? Silakan hubungi admin atau datang langsung ke lokasi kami untuk pengambilan barang.
         </p>
       </div>
@@ -50,7 +50,7 @@ export default function KontakPage(){
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">⏰ Jam Operasional Pengambilan</h3>
               <p className="text-sm text-gray-600">Senin - Sabtu: 08.00 - 17.00 WITA</p>
-              <p className="text-sm text-gray-500">Minggu / Hari Libur: Tutup</p>
+              <p className="text-sm text-gray-500">Minggu / Hari Libur: 10.00-20.00 WITA</p>
             </div>
 
             <hr className="border-gray-100" />
@@ -71,7 +71,7 @@ export default function KontakPage(){
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">📍 Lokasi Pengambilan Barang</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Silakan menunjukkan bukti booking / peminjaman dari aplikasi saat mengambil barang di sekretariat/kantor kami.
+              Silakan menunjukkan bukti booking / peminjaman dari aplikasi saat mengambil barang.
             </p>
             
             <div className="bg-gray-100 p-4 rounded-xl text-sm mb-4">
