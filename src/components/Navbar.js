@@ -92,6 +92,15 @@ export default function Navbar() {
             Beranda
           </Link>
 
+          <Link
+            href="/"
+            className={`transition ${
+              pathname === "/" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
+            }`}
+          >
+            Kontak
+          </Link>
+
           {/* Menu Khusus USER BIASA (Peminjaman & Status) */}
           {isLoggedIn && userRole !== "admin" && (
             <>
