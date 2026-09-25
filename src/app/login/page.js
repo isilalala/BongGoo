@@ -9,7 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("masuk");
 
-  // State Login
+  // State Logins
   const [loginUser, setLoginUser] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
 
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
+  const [registeredUserId, setRegisteredUserId] = useState(""); // 👈 State untuk simpan ID Unik pendaftar
 
   const ADMIN_USER = "admin";
   const ADMIN_EMAIL = "admin@bonggoo.com";
@@ -50,7 +51,11 @@ export default function LoginPage() {
       localStorage.setItem("authToken", "token-admin-123");
       localStorage.setItem(
         "user",
-        JSON.stringify({ username: "admin", role: "admin" })
+        JSON.stringify({
+          id: "ADM-001", // 👈 ID Unik khusus Admin
+          username: "admin",
+          role: "admin",
+        })
       );
 
       window.dispatchEvent(new Event("authChange"));
@@ -60,11 +65,30 @@ export default function LoginPage() {
 
     // 2. Validasi User Biasa
     if (formattedUser && loginPassword.length >= 4) {
+      // Cek apakah user pernah mendaftar dan punya ID Unik terdaftar
+      const registeredUsers = JSON.parse(
+        localStorage.getItem("registeredUsers") || "[]"
+      );
+      const existingUser = registeredUsers.find(
+        (u) =>
+          u.username.toLowerCase() === formattedUser ||
+          u.email.toLowerCase() === formattedUser
+      );
+
+      // Gunakan ID unik terdaftar jika ada, atau buat ID unik baru
+      const userId = existingUser
+        ? existingUser.id
+        : `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+
       localStorage.setItem("userRole", "user");
       localStorage.setItem("authToken", `token-${loginUser}`);
       localStorage.setItem(
         "user",
-        JSON.stringify({ username: loginUser, role: "user" })
+        JSON.stringify({
+          id: userId, // 👈 ID Unik User tersimpan
+          username: loginUser,
+          role: "user",
+        })
       );
 
       window.dispatchEvent(new Event("authChange"));
@@ -76,7 +100,7 @@ export default function LoginPage() {
     }
   };
 
-  // --- HANDLER REGISTER DENGAN VALIDASI STRATA ---
+  // --- HANDLER REGISTER DENGAN VALIDASI & ID UNIK ---
   const handleRegister = (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -107,7 +131,30 @@ export default function LoginPage() {
       return;
     }
 
-    // Jika semua validasi lolos
+    // --- GENERATE ID UNIK USER BERBEDA DENGAN ANGKA ACAK ---
+    const newUserId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+    setRegisteredUserId(newUserId);
+
+    // Simpan data pendaftar baru ke daftar registeredUsers
+    const newUserData = {
+      id: newUserId,
+      nama: regNama,
+      username: regUsername,
+      hp: regHp,
+      email: regEmail,
+      nik: regNik,
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingUsers = JSON.parse(
+      localStorage.getItem("registeredUsers") || "[]"
+    );
+    localStorage.setItem(
+      "registeredUsers",
+      JSON.stringify([newUserData, ...existingUsers])
+    );
+
+    // Registrasi Berhasil
     setIsRegisterSuccess(true);
   };
 
@@ -118,7 +165,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center">
+    <div className="w-full min-h-screen h-screen py-10 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center font-sans">
       <div
         className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: "url('/fandom-kpop.jpg')" }}
@@ -278,7 +325,9 @@ export default function LoginPage() {
                   type="text"
                   required
                   value={regHp}
-                  onChange={(e) => setRegHp(e.target.value.replace(/[^0-9]/g, ""))}
+                  onChange={(e) =>
+                    setRegHp(e.target.value.replace(/[^0-9]/g, ""))
+                  }
                   placeholder="0812xxxxxxxx (10-13 digit)"
                   maxLength={13}
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
@@ -308,7 +357,9 @@ export default function LoginPage() {
                 type="text"
                 required
                 value={regNik}
-                onChange={(e) => setRegNik(e.target.value.replace(/[^0-9]/g, ""))}
+                onChange={(e) =>
+                  setRegNik(e.target.value.replace(/[^0-9]/g, ""))
+                }
                 placeholder="Masukkan 16 digit NIK"
                 maxLength={16}
                 className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
@@ -388,7 +439,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* MODAL SUCCESS */}
+      {/* MODAL SUCCESS DENGAN MENAMPILKAN ID UNIK */}
       {isRegisterSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl border border-gray-100">
@@ -398,7 +449,18 @@ export default function LoginPage() {
             <h3 className="text-lg font-bold text-gray-800">
               Pendaftaran Berhasil!
             </h3>
-            <p className="text-xs text-gray-500 mt-2 mb-6">
+
+            {/* Lencana Tampilan ID Unik */}
+            <div className="my-3 bg-pink-50 border border-pink-100 p-2.5 rounded-2xl">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                ID Unik Pengguna Kamu:
+              </p>
+              <p className="text-base font-extrabold text-pink-600 tracking-wide mt-0.5">
+                {registeredUserId}
+              </p>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-6">
               Akun kamu berhasil terdaftar. Silakan masuk menggunakan username/email dan password.
             </p>
 
