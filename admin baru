@@ -1,0 +1,552 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Badge from "../../components/Badge";
+
+const INITIAL_STOK = [
+  { id: 1, group: "BTS", item: "Army Bomb Ver 3", dipinjam: 2, tersisa: 3, total: 2 },
+  { id: 2, group: "NCT", item: "Neobong Ver 1", dipinjam: 4, tersisa: 0, total: 4 },
+  { id: 3, group: "BLACKPINK", item: "BI-Ping-Bong Ver 2", dipinjam: 1, tersisa: 2, total: 3 },
+  { id: 4, group: "SEVENTEEN", item: "Caratbong Ver 3", dipinjam: 3, tersisa: 0, total: 3 },
+  { id: 5, group: "TWICE", item: "Candy Bong Z", dipinjam: 0, tersisa: 4, total: 4 },
+];
+
+export default function ApprovalPage() {
+  const [requests, setRequests] = useState([]);
+  const [stockData, setStockData] = useState([]);
+  const [isMounted, setIsMounted] = useState(false);
+  const [activeSection, setActiveSection] = useState(null);
+
+  const [returnLogs] = useState([
+    {
+      id: "REQ-224",
+      user: "rara2",
+      item: "Army Bomb Ver 3",
+      dueDate: "2026-09-20",
+      returnDate: null,
+      status: "Dipinjam",
+    },
+    {
+      id: "REQ-499",
+      user: "rara2",
+      item: "Neobong Ver 1",
+      dueDate: "2026-09-26",
+      returnDate: "2026-09-24",
+      status: "Dikembalikan",
+    },
+    {
+      id: "REQ-705",
+      user: "budi_kpop",
+      item: "Caratbong Ver 3",
+      dueDate: "2026-09-28",
+      returnDate: null,
+      status: "Dipinjam",
+    },
+  ]);
+
+  const loadData = () => {
+    try {
+      const requestsString = localStorage.getItem("borrowRequests");
+      const allRequests = requestsString ? JSON.parse(requestsString) : [];
+      setRequests(Array.isArray(allRequests) ? allRequests : []);
+
+      const stockString = localStorage.getItem("lightstickStock");
+      if (stockString) {
+        setStockData(JSON.parse(stockString));
+      } else {
+        localStorage.setItem("lightstickStock", JSON.stringify(INITIAL_STOK));
+        setStockData(INITIAL_STOK);
+      }
+    } catch (error) {
+      console.error("Gagal memuat data:", error);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      loadData();
+    }, 0);
+
+    window.addEventListener("storage", loadData);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("storage", loadData);
+    };
+  }, []);
+
+  const handleUpdateStatus = (id, newStatus, itemName) => {
+    try {
+      const requestsString = localStorage.getItem("borrowRequests");
+      const allRequests = requestsString ? JSON.parse(requestsString) : [];
+
+      const updatedRequests = allRequests.map((item) => {
+        if (item.id === id) {
+          return { ...item, status: newStatus };
+        }
+        return item;
+      });
+
+      localStorage.setItem("borrowRequests", JSON.stringify(updatedRequests));
+
+      if (newStatus === "Approved") {
+        const stockString = localStorage.getItem("lightstickStock");
+        const currentStock = stockString ? JSON.parse(stockString) : INITIAL_STOK;
+
+        const updatedStock = currentStock.map((stok) => {
+          if (
+            stok.item.toLowerCase().includes(itemName?.toLowerCase()) ||
+            itemName?.toLowerCase().includes(stok.item.toLowerCase())
+          ) {
+            if (stok.tersisa > 0) {
+              return {
+                ...stok,
+                dipinjam: stok.dipinjam + 1,
+                tersisa: stok.tersisa - 1,
+              };
+            } else {
+              alert("⚠️ Warning: Stok barang ini sebenarnya sudah habis!");
+            }
+          }
+          return stok;
+        });
+
+        localStorage.setItem("lightstickStock", JSON.stringify(updatedStock));
+      }
+
+      window.dispatchEvent(new Event("storage"));
+      loadData();
+    } catch (error) {
+      console.error("Gagal mengupdate status:", error);
+    }
+  };
+
+  const handleCardClick = (sectionType) => {
+    if (activeSection === sectionType) {
+      setActiveSection(null);
+    } else {
+      setActiveSection(sectionType);
+    }
+  };
+
+  const isLate = (dueDateStr, returnDate, currentStatus) => {
+    if (currentStatus === "Dikembalikan" || returnDate) return false;
+    const today = new Date("2026-09-24");
+    const due = new Date(dueDateStr);
+    return today > due;
+  };
+
+  const pendingRequests = requests.filter(
+    (req) => req.status === "Pending" || req.status === "PENDING" || !req.status
+  ).length;
+
+  const approvedRequests = requests.filter(
+    (req) => req.status === "Approved" || req.status === "APPROVED"
+  ).length;
+
+  const rejectedRequests = requests.filter(
+    (req) => req.status === "Rejected" || req.status === "REJECTED"
+  ).length;
+
+  const filteredRequests = requests.filter((req) => {
+    if (activeSection === "pending") {
+      return req.status === "Pending" || req.status === "PENDING" || !req.status;
+    }
+    if (activeSection === "approved") {
+      return req.status === "Approved" || req.status === "APPROVED";
+    }
+    if (activeSection === "rejected") {
+      return req.status === "Rejected" || req.status === "REJECTED";
+    }
+    return false;
+  });
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-white p-8 flex items-center justify-center font-sans text-gray-600">
+        Memuat panel admin...
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen w-full bg-white p-6 md:p-8 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl border-2 border-pink-400 flex items-center justify-center text-pink-600 font-black text-base bg-pink-50 shrink-0">
+                ADM
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Super Admin</h2>
+                <p className="text-xs text-gray-500 mb-1.5">admin@bonggoo.com</p>
+                <span className="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-md">
+                  Online
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
+                TANGGAL HARI INI
+              </p>
+              <p className="text-base font-extrabold text-gray-800">
+                Kamis, 24 September 2026
+              </p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-8">
+            <div className="relative overflow-hidden p-8 rounded-2xl text-white shadow-sm h-full flex flex-col justify-center min-h-[180px] bg-[#FF0055]">
+              <div className="relative z-10">
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 uppercase">
+                  ITS BONGGO ADMIN!
+                </h1>
+                <p className="text-sm opacity-90 font-medium max-w-xl">
+                  Panel Kontrol Operasional & Pengelolaan Persetujuan Penyewaan Lightstick K-Pop.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={() => handleCardClick("pending")}
+            className={`text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+              activeSection === "pending"
+                ? "bg-sky-100 border-sky-600 ring-2 ring-sky-500/30 shadow-md"
+                : "bg-sky-100/70 border-sky-300 hover:bg-sky-100 hover:border-sky-400 shadow-sm"
+            } flex flex-col justify-between`}
+          >
+            <div>
+              <p className="text-[11px] font-extrabold text-sky-800 uppercase tracking-wider mb-1">
+                Perlu Diproses (Pending)
+              </p>
+              <p className="text-3xl md:text-4xl font-black text-sky-950">
+                {pendingRequests}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-sky-200/80 flex items-center justify-between text-xs text-sky-800 font-bold w-full">
+              <span>{activeSection === "pending" ? "Sembunyikan Data ▲" : "Klik Lihat Data Pending ▼"}</span>
+              <span className="bg-sky-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                Antrean
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleCardClick("approved")}
+            className={`text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+              activeSection === "approved"
+                ? "bg-emerald-100 border-emerald-600 ring-2 ring-emerald-500/30 shadow-md"
+                : "bg-emerald-100/70 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 shadow-sm"
+            } flex flex-col justify-between`}
+          >
+            <div>
+              <p className="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider mb-1">
+                Peminjaman Disetujui
+              </p>
+              <p className="text-3xl md:text-4xl font-black text-emerald-950">
+                {approvedRequests}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-emerald-200/80 flex items-center justify-between text-xs text-emerald-800 font-bold w-full">
+              <span>{activeSection === "approved" ? "Sembunyikan Data ▲" : "Klik Lihat Data ACC ▼"}</span>
+              <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                ACC
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleCardClick("rejected")}
+            className={`text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+              activeSection === "rejected"
+                ? "bg-rose-100 border-rose-600 ring-2 ring-rose-500/30 shadow-md"
+                : "bg-rose-100/70 border-rose-300 hover:bg-rose-100 hover:border-rose-400 shadow-sm"
+            } flex flex-col justify-between`}
+          >
+            <div>
+              <p className="text-[11px] font-extrabold text-rose-800 uppercase tracking-wider mb-1">
+                Peminjaman Ditolak
+              </p>
+              <p className="text-3xl md:text-4xl font-black text-rose-950">
+                {rejectedRequests}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-rose-200/80 flex items-center justify-between text-xs text-rose-800 font-bold w-full">
+              <span>{activeSection === "rejected" ? "Sembunyikan Data ▲" : "Klik Lihat Data Ditolak ▼"}</span>
+              <span className="bg-rose-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                Tolak
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
+          <button
+            onClick={() => handleCardClick("returns")}
+            className={`lg:col-span-5 text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+              activeSection === "returns"
+                ? "bg-purple-100 border-purple-600 ring-2 ring-purple-500/30 shadow-md"
+                : "bg-purple-100/70 border-purple-300 hover:bg-purple-100 hover:border-purple-400 shadow-sm"
+            } flex flex-col justify-between`}
+          >
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-[11px] font-extrabold text-purple-800 uppercase tracking-wider">
+                  📦 Status Pengembalian Barang
+                </p>
+                <span className="bg-purple-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                  Log Kembali
+                </span>
+              </div>
+              <p className="text-3xl md:text-4xl font-black text-purple-950 mt-1">
+                {returnLogs.length} <span className="text-sm font-semibold text-purple-800">Transaksi</span>
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-purple-200/80 flex items-center justify-between text-xs text-purple-800 font-bold w-full">
+              <span>{activeSection === "returns" ? "Sembunyikan Detail ▲" : "Klik Lihat Detail Pengembalian ▼"}</span>
+              <span className="text-[11px] text-purple-700">Tepat Waktu & Terlambat</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleCardClick("stock")}
+            className={`lg:col-span-7 text-left p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+              activeSection === "stock"
+                ? "bg-amber-100 border-amber-600 ring-2 ring-amber-500/30 shadow-md"
+                : "bg-amber-100/70 border-amber-300 hover:bg-amber-100 hover:border-amber-400 shadow-sm"
+            } flex flex-col justify-between`}
+          >
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-[11px] font-extrabold text-amber-800 uppercase tracking-wider">
+                  📊 Monitor Stok Barang Lightstick
+                </p>
+                <span className="bg-amber-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                  Inventaris
+                </span>
+              </div>
+              <p className="text-3xl md:text-4xl font-black text-amber-950 mt-1">
+                {stockData.length} <span className="text-sm font-semibold text-amber-800">Jenis Barang Available</span>
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-800 font-bold w-full">
+              <span>{activeSection === "stock" ? "Sembunyikan Tabel Stok ▲" : "Klik Lihat Tabel Stok Barang ▼"}</span>
+              <span className="text-[11px] text-amber-700">Status Habis & Tersedia</span>
+            </div>
+          </button>
+        </div>
+
+        {(activeSection === "pending" || activeSection === "approved" || activeSection === "rejected") && (
+          <div className="space-y-4 pt-2 transition-all">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-extrabold text-gray-900">
+                {activeSection === "pending" && `Antrean Pengajuan Menunggu Persetujuan (${filteredRequests.length})`}
+                {activeSection === "approved" && `Daftar Peminjaman Disetujui (${filteredRequests.length})`}
+                {activeSection === "rejected" && `Daftar Peminjaman Ditolak (${filteredRequests.length})`}
+              </h2>
+            </div>
+
+            {filteredRequests.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredRequests.map((req, index) => {
+                  const itemName = req.itemName || req.item || "";
+                  return (
+                    <div
+                      key={req.id || index}
+                      className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-shadow"
+                    >
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="bg-pink-100 text-[#FF0055] text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase">
+                            {req.groupName || req.group || "K-POP"}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400">
+                            {req.id}
+                          </span>
+                        </div>
+
+                        <h3 className="font-bold text-sm text-gray-900">
+                          {itemName}
+                        </h3>
+                        <p className="text-xs font-semibold text-pink-600 mt-0.5">
+                          👤 Peminjam: {req.username || req.user || "User"}
+                        </p>
+                        <p className="text-[11px] text-gray-500 mt-1">
+                          📅 {req.startDate ? `${req.startDate} (${req.days} Hari)` : req.date}
+                        </p>
+                        {req.eventName && (
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            🎟️ {req.eventName}
+                          </p>
+                        )}
+                        {req.totalBiaya && (
+                          <p className="text-xs font-extrabold text-gray-900 mt-2">
+                            Rp {Number(req.totalBiaya).toLocaleString("id-ID")}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-gray-400 font-bold uppercase">
+                            Status:
+                          </span>
+                          <Badge status={req.status || "Pending"} />
+                        </div>
+
+                        {(req.status === "Pending" || req.status === "PENDING" || !req.status) && (
+                          <div className="flex gap-2 mt-1">
+                            <button
+                              onClick={() => handleUpdateStatus(req.id, "Approved", itemName)}
+                              className="flex-1 bg-[#00C853] hover:bg-emerald-600 text-white text-xs font-bold py-2 rounded-xl transition cursor-pointer"
+                            >
+                              Setujui
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(req.id, "Rejected", itemName)}
+                              className="flex-1 bg-[#FFEBF0] hover:bg-pink-200 text-[#FF0055] text-xs font-bold py-2 rounded-xl transition cursor-pointer"
+                            >
+                              Tolak
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center shadow-sm">
+                <p className="text-sm font-bold text-gray-700">
+                  {activeSection === "pending" 
+                    ? "🎉 Mantap! Semua antrean pengajuan sudah selesai diproses." 
+                    : "Tidak ada data pengajuan dalam kategori ini."}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeSection === "returns" && (
+          <div className="bg-white p-6 rounded-2xl border border-purple-200 shadow-sm space-y-4 transition-all">
+            <h2 className="text-lg font-extrabold text-purple-900">
+              📋 Detail Status Pengembalian Barang
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {returnLogs.map((log) => {
+                const late = isLate(log.dueDate, log.returnDate, log.status);
+
+                return (
+                  <div
+                    key={log.id}
+                    className={`p-4 rounded-xl border flex flex-col justify-between space-y-3 ${
+                      late
+                        ? "bg-red-50 border-red-300 ring-1 ring-red-400"
+                        : "bg-white border-gray-200"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-bold text-gray-400">{log.id}</span>
+                        {late ? (
+                          <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">
+                            🚨 TERLAMBAT
+                          </span>
+                        ) : log.returnDate ? (
+                          <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            Sudah Dikembalikan
+                          </span>
+                        ) : (
+                          <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            Dipinjam
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-bold text-sm text-gray-900">{log.item}</h3>
+                      <p className="text-xs text-purple-700 font-semibold mt-0.5">👤 Peminjam: {log.user}</p>
+
+                      <div className="mt-3 pt-2 border-t border-gray-100 text-[11px] space-y-1">
+                        <p className="text-gray-600">
+                          📅 Seharusnya Kembali: <b className="text-gray-900">{log.dueDate}</b>
+                        </p>
+                        <p className="text-gray-600">
+                          🏁 Tanggal Dikembalikan:{" "}
+                          <b className={log.returnDate ? "text-emerald-700" : "text-amber-700"}>
+                            {log.returnDate ? log.returnDate : "Belum Dikembalikan"}
+                          </b>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeSection === "stock" && (
+          <div className="bg-white p-6 rounded-2xl border border-amber-200 shadow-sm space-y-4 transition-all">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-extrabold text-amber-900">
+                📊 Tabel Stok Lightstick Real-time
+              </h2>
+              <p className="text-xs text-gray-500">
+                *Stok otomatis berkurang jika peminjaman disetujui (Approved)
+              </p>
+            </div>
+
+            <div className="overflow-x-auto bg-white rounded-xl border border-gray-200">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-amber-50/80 border-b border-amber-200 text-[11px] font-extrabold text-amber-900 uppercase">
+                    <th className="py-3 px-4">No</th>
+                    <th className="py-3 px-4">Nama Grup</th>
+                    <th className="py-3 px-4">Nama Lightstick</th>
+                    <th className="py-3 px-4 text-center">Dipinjam</th>
+                    <th className="py-3 px-4 text-center">Tersisa</th>
+                    <th className="py-3 px-4 text-center">Total Stok</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-xs">
+                  {stockData.map((item, index) => {
+                    const isHabis = item.tersisa === 0;
+                    return (
+                      <tr key={item.id} className="hover:bg-amber-50/30 transition-colors">
+                        <td className="py-3 px-4 font-bold text-gray-400">{index + 1}</td>
+                        <td className="py-3 px-4 font-extrabold text-pink-600">{item.group}</td>
+                        <td className="py-3 px-4 font-bold text-gray-800">{item.item}</td>
+                        <td className="py-3 px-4 text-center font-semibold text-gray-600">{item.dipinjam}</td>
+                        <td className="py-3 px-4 text-center font-black text-gray-900">{item.tersisa}</td>
+                        <td className="py-3 px-4 text-center font-bold text-gray-500">{item.total}</td>
+                        <td className="py-3 px-4 text-center">
+                          {isHabis ? (
+                            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-md animate-pulse shadow-sm">
+                              HABIS
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-md">
+                              Tersedia
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
