@@ -1,38 +1,73 @@
-// lib/api.ts
+// src/lib/api.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://hmif.if.unram.ac.id/api/v2';
+// Arahkan ke endpoint proxy Next.js
+const BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://hmif.if.unram.ac.id/api/v3').replace(/\/+$/, '');
 const PROJECT = process.env.NEXT_PUBLIC_PROJECT_ID || 'bonggoo';
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'pk_bonggoo_002f7db5cccb9c86';
+const KEY = process.env.NEXT_PUBLIC_API_KEY || 'pk_bonggoo_002f7db5cccb9c86';
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${BASE_URL}/${PROJECT}${cleanEndpoint}`;
+interface ApiFetchOptions {
+  method?: string;
+  body?: any;
+  token?: string;
+}
 
-  // Ambil token dari localStorage jika dipanggil di Client Component (browser)
-  let bearerToken = '';
-  if (typeof window !== 'undefined') {
-    bearerToken = localStorage.getItem('authToken') || localStorage.getItem('session_token') || '';
-  }
+export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
+  const { method = 'GET', body, token } = options;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'X-API-Key': API_KEY, // Layer 1: Akses Backend Kelompok
+    Accept: 'application/json',
+    'X-API-Key': KEY,
   };
 
-  if (bearerToken) {
-    headers['Authorization'] = `Bearer ${bearerToken}`; // Layer 2: User Session JWT
+  if (token) headers.Authorization = 'Bearer ' + token;
+
+  let verb = method.toUpperCase();
+  let suffix = '';
+
+  if (verb === 'PUT' || verb === 'DELETE') {
+    headers['X-HTTP-Method-Override'] = verb;
+    suffix = (path.indexOf('?') === -1 ? '?' : '&') + '_method=' + verb;
+    verb = 'POST';
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers: { ...headers, ...options.headers },
-  });
+  if (body) headers['Content-Type'] = 'application/json';
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || `Request gagal: status ${res.status}`);
+  let cleanPath = path.startsWith('/') ? path : '/' + path;
+
+  const projectPrefix = '/' + PROJECT;
+  if (cleanPath.startsWith(projectPrefix)) {
+    cleanPath = cleanPath.slice(projectPrefix.length);
   }
 
-  return data;
+  const targetUrl = `${BASE}/${PROJECT}${cleanPath}${suffix}`;
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: verb,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      console.warn(`[API Warning ${res.status}] pada ${targetUrl}:`, data);
+      return {
+        success: false,
+        error: true,
+        message: data.message || data.error || res.statusText,
+        data: [],
+      };
+    }
+
+    return data;
+  } catch (err) {
+    console.error(`[API Error] pada ${targetUrl}:`, err);
+    return {
+      success: false,
+      error: true,
+      message: 'Server API tidak dapat dijangkau',
+      data: [],
+    };
+  }
 }

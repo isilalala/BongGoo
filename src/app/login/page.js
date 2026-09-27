@@ -4,12 +4,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "../../components/Button";
+import { apiFetch } from "../../lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("masuk");
 
-  // State Logins
+  // State Login
   const [loginUser, setLoginUser] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,137 +30,138 @@ export default function LoginPage() {
   const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
 
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
-  const [registeredUserId, setRegisteredUserId] = useState(""); // 👈 State untuk simpan ID Unik pendaftar
+  const [registeredUserId, setRegisteredUserId] = useState("");
 
-  const ADMIN_USER = "admin";
-  const ADMIN_EMAIL = "admin@bonggoo.com";
-  const ADMIN_PASS = "admin123";
-
-  // --- HANDLER LOGIN ---
-  const handleLogin = (e) => {
-    e.preventDefault();
+  // --- HANDLER LOGIN VIA API ---
+  // --- HANDLER LOGIN VIA API (DISESUAIKAN UNTUK SWAGGER V3) ---
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     setErrorMsg("");
 
-    const formattedUser = loginUser.trim().toLowerCase();
+    const inputVal = loginUser.trim();
 
-    // 1. Validasi Admin
-    if (
-      (formattedUser === ADMIN_USER || formattedUser === ADMIN_EMAIL) &&
-      loginPassword === ADMIN_PASS
-    ) {
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem("authToken", "token-admin-123");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: "ADM-001", // 👈 ID Unik khusus Admin
-          username: "admin",
-          role: "admin",
-        })
-      );
-
-      window.dispatchEvent(new Event("authChange"));
-      router.push("/approval");
+    if (!inputVal || !loginPassword) {
+      setErrorMsg("Email / Username dan Password wajib diisi!");
       return;
     }
 
-    // 2. Validasi User Biasa
-    if (formattedUser && loginPassword.length >= 4) {
-      // Cek apakah user pernah mendaftar dan punya ID Unik terdaftar
-      const registeredUsers = JSON.parse(
-        localStorage.getItem("registeredUsers") || "[]"
-      );
-      const existingUser = registeredUsers.find(
-        (u) =>
-          u.username.toLowerCase() === formattedUser ||
-          u.email.toLowerCase() === formattedUser
-      );
+    try {
+      // Kirim objek payload yang fleksibel (mendukung email & username)
+      const payload = {
+        email: inputVal,
+        username: inputVal,
+        identity: inputVal,
+        password: loginPassword,
+      };
 
-      // Gunakan ID unik terdaftar jika ada, atau buat ID unik baru
-      const userId = existingUser
-        ? existingUser.id
-        : `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+      const res = await apiFetch("/login", {
+        method: "POST",
+        body: payload,
+      });
 
-      localStorage.setItem("userRole", "user");
-      localStorage.setItem("authToken", `token-${loginUser}`);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: userId, // 👈 ID Unik User tersimpan
-          username: loginUser,
-          role: "user",
-        })
-      );
+      console.log("Response Login dari API:", res);
 
-      window.dispatchEvent(new Event("authChange"));
-      router.push("/");
-      return;
-    } else {
-      setErrorMsg("Username/Email atau Password tidak valid!");
-      return;
+      // Jika berhasil (tidak ada flag error atau HTTP 401)
+      if (res && !res.error && res.success !== false) {
+        const token = res.token || res.data?.token || res.access_token || "auth-token";
+        const userObj = res.user || res.data?.user || res.data || res;
+
+        // Ambil ID / UUID asli dari database
+        const realUserId =
+          userObj.Id || userObj.id || userObj.UUID || userObj.uuid || userObj.User_id;
+        const userRole = (
+          userObj.Role ||
+          userObj.role ||
+          (inputVal.toLowerCase().includes("admin") ? "admin" : "user")
+        ).toLowerCase();
+
+        const cleanUserData = {
+          id: realUserId,
+          Id: realUserId,
+          username: userObj.Username || userObj.username || inputVal,
+          email: userObj.Email || userObj.email || inputVal,
+          name: userObj.Nama_lengkap || userObj.name || inputVal,
+          role: userRole,
+        };
+
+        if (token) localStorage.setItem("authToken", token);
+        localStorage.setItem("userRole", userRole);
+        localStorage.setItem("user", JSON.stringify(cleanUserData));
+
+        window.dispatchEvent(new Event("authChange"));
+
+        if (userRole === "admin") {
+          router.push("/status");
+        } else {
+          router.push("/");
+        }
+      } else {
+        setErrorMsg(res.message || "Email atau password tidak valid.");
+      }
+    } catch (err) {
+      console.error("Gagal melakukan login via API:", err);
+      setErrorMsg(err.message || "Gagal terhubung ke server login.");
     }
   };
 
-  // --- HANDLER REGISTER DENGAN VALIDASI & ID UNIK ---
-  const handleRegister = (e) => {
-    e.preventDefault();
+  // --- HANDLER REGISTER VIA API ---
+  const handleRegister = async (e) => {
+    if (e) e.preventDefault();
     setErrorMsg("");
 
-    // Validasi No. HP (10 - 13 digit angka)
     const hpRegex = /^[0-9]{10,13}$/;
     if (!hpRegex.test(regHp)) {
       setErrorMsg("Nomor HP/WA tidak valid! Harus berupa angka 10-13 digit.");
       return;
     }
 
-    // Validasi NIK (persis 16 digit angka)
     const nikRegex = /^[0-9]{16}$/;
     if (!nikRegex.test(regNik)) {
       setErrorMsg("NIK tidak valid! Harus tepat 16 digit angka.");
       return;
     }
 
-    // Validasi Panjang Password
     if (regPassword.length < 6) {
       setErrorMsg("Password minimal 6 karakter!");
       return;
     }
 
-    // Validasi Kesesuaian Password & Konfirmasi Password
     if (regPassword !== regConfirmPassword) {
       setErrorMsg("Konfirmasi password tidak cocok dengan password!");
       return;
     }
 
-    // --- GENERATE ID UNIK USER BERBEDA DENGAN ANGKA ACAK ---
-    const newUserId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
-    setRegisteredUserId(newUserId);
+    try {
+      const res = await apiFetch("/register", {
+        method: "POST",
+        body: {
+          Nama_lengkap: regNama,
+          Username: regUsername,
+          Email: regEmail,
+          Password: regPassword,
+          No_handphone: regHp,
+          NIK_KTP: regNik,
+          Role: "USER",
+        },
+      });
 
-    // Simpan data pendaftar baru ke daftar registeredUsers
-    const newUserData = {
-      id: newUserId,
-      nama: regNama,
-      username: regUsername,
-      hp: regHp,
-      email: regEmail,
-      nik: regNik,
-      createdAt: new Date().toISOString(),
-    };
+      if (res && !res.error) {
+        const userObj = res.user || res.data || res;
+        const createdId = userObj.Id || userObj.id || userObj.UUID || "Sukses";
 
-    const existingUsers = JSON.parse(
-      localStorage.getItem("registeredUsers") || "[]"
-    );
-    localStorage.setItem(
-      "registeredUsers",
-      JSON.stringify([newUserData, ...existingUsers])
-    );
-
-    // Registrasi Berhasil
-    setIsRegisterSuccess(true);
+        setRegisteredUserId(createdId);
+        setIsRegisterSuccess(true);
+      } else {
+        setErrorMsg(res.message || "Gagal mendaftar akun ke server.");
+      }
+    } catch (err) {
+      console.error("Error Register API:", err);
+      setErrorMsg(err.message || "Gagal mengajukan pendaftaran ke server.");
+    }
   };
 
   const handleCloseModal = () => {
-    setLoginUser(regEmail || regUsername);
+    setLoginUser(regUsername || regEmail);
     setIsRegisterSuccess(false);
     setActiveTab("masuk");
   };
@@ -328,7 +330,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setRegHp(e.target.value.replace(/[^0-9]/g, ""))
                   }
-                  placeholder="0812xxxxxxxx (10-13 digit)"
+                  placeholder="0812xxxxxxxx"
                   maxLength={13}
                   className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50/50"
                 />
@@ -366,7 +368,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* FIELD PASSWORD & TOGGLE LIHAT */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 Password
@@ -390,7 +391,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* FIELD KONFIRMASI PASSWORD */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
                 Konfirmasi Password
@@ -414,18 +414,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Upload Foto Identitas (KTP)
-              </label>
-              <input
-                type="file"
-                required
-                accept="image/*"
-                className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100 cursor-pointer"
-              />
-            </div>
-
             <Button
               type="submit"
               variant="primary"
@@ -439,7 +427,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* MODAL SUCCESS DENGAN MENAMPILKAN ID UNIK */}
+      {/* MODAL SUCCESS */}
       {isRegisterSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl border border-gray-100">
@@ -450,12 +438,11 @@ export default function LoginPage() {
               Pendaftaran Berhasil!
             </h3>
 
-            {/* Lencana Tampilan ID Unik */}
             <div className="my-3 bg-pink-50 border border-pink-100 p-2.5 rounded-2xl">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 ID Unik Pengguna Kamu:
               </p>
-              <p className="text-base font-extrabold text-pink-600 tracking-wide mt-0.5">
+              <p className="text-xs font-extrabold text-pink-600 tracking-wide mt-0.5 break-all">
                 {registeredUserId}
               </p>
             </div>

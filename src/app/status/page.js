@@ -1,93 +1,119 @@
-// app/status/page.js
+// src/app/status/page.js
 "use client";
 
 import { useEffect, useState } from "react";
 import Badge from "../../components/Badge";
+import { apiFetch } from "../../lib/api";
 
 export default function StatusPage() {
   const [rentals, setRentals] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Fungsi muat data dari localStorage
-  const loadData = () => {
+  // FUNGSI UTAMA MUAT DATA LOANS DARI API BACKEND
+  const loadData = async () => {
     try {
-      const userRole = localStorage.getItem("userRole");
-      const userString = localStorage.getItem("user");
+      setIsLoading(true);
+      setErrorMsg("");
+
+      const userRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
+      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+      const userString = typeof window !== "undefined" ? localStorage.getItem("user") : null;
       const currentUser = userString ? JSON.parse(userString) : {};
-      const loggedInUsername = currentUser.username || currentUser.name || "";
 
-      // Cek apakah akun yang login adalah Admin
+      // Ekstrak ID user login dari berbagai kemungkinan nama field
+      const currentUserId =
+        currentUser.Id ||
+        currentUser.id ||
+        currentUser.ID ||
+        currentUser.User_id ||
+        currentUser.user_id ||
+        currentUser.UUID ||
+        currentUser.uuid;
+
+      const loggedInUsername = currentUser.username || currentUser.name || currentUser.Username || "";
+
+      // Cek peran Admin (Bisa 'ADMIN' atau 'admin')
       const checkAdmin =
-        userRole === "admin" ||
+        userRole?.toLowerCase() === "admin" ||
         loggedInUsername.toUpperCase().includes("ADMIN");
-
       setIsAdmin(checkAdmin);
 
-      const requestsString = localStorage.getItem("borrowRequests");
-      const allRequests = requestsString ? JSON.parse(requestsString) : [];
+      // Fetch data transaksi peminjaman langsung dari endpoint /loans
+      const res = await apiFetch("/loans", { token });
+      console.log("Response Loans dari API:", res);
 
-      if (Array.isArray(allRequests)) {
-        if (checkAdmin) {
-          // ADMIN: Tampilkan SEMUA riwayat peminjaman
-          setRentals(allRequests);
-        } else {
-          // USER: Hanya tampilkan milik sendiri
-          const myRequests = allRequests.filter(
-            (item) => item && item.username === loggedInUsername
+      // Ekstraksi array data dari response API
+      const extractArray = (data) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data.data)) return data.data;
+        if (Array.isArray(data.result)) return data.result;
+        if (Array.isArray(data.payload)) return data.payload;
+        return [];
+      };
+
+      const allLoans = extractArray(res);
+
+      // Jika user biasa dan berhasil mengambil data ID, filter berdasarkan User_id
+      if (!checkAdmin && currentUserId) {
+        const userLoans = allLoans.filter((item) => {
+          const itemUserId =
+            item.User_id ??
+            item.user_id ??
+            item.userId ??
+            item.User_ID ??
+            item.id_user;
+
+          return (
+            itemUserId !== undefined &&
+            String(itemUserId).toLowerCase().trim() === String(currentUserId).toLowerCase().trim()
           );
-          setRentals(myRequests);
-        }
+        });
+
+        // Jika filter berhasil menemukan data pinjaman user, tampilkan data user
+        // Jika tidak ada hasil (misal ID di backend beda tipe/format), tampilkan seluruh data sementara agar tidak kosong
+        setRentals(userLoans.length > 0 ? userLoans : allLoans);
       } else {
-        setRentals([]);
+        // Jika Admin, tampilkan semua data peminjaman
+        setRentals(allLoans);
       }
     } catch (error) {
-      console.error("Gagal memuat data dari localStorage:", error);
+      console.error("Gagal memuat data loans:", error);
+      setErrorMsg(error.message || "Gagal mengambil data dari server API.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Dibungkus setTimeout (0ms) agar dimuat secara asinkron (Bebas Peringatan Linter)
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-      loadData();
-    }, 0);
-
-    // Listener jika ada pembaruan data di tab lain/action lain
-    window.addEventListener("storage", loadData);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("storage", loadData);
-    };
+    setIsMounted(true);
+    loadData();
   }, []);
 
-  // --- HANDLER UBAH STATUS (SETUJUI / TOLAK) ---
-  const handleUpdateStatus = (id, newStatus) => {
+  // HANDLER UBAH STATUS TRANSAKSI (KHUSUS ADMIN)
+  const handleUpdateStatus = async (id, newStatus) => {
     try {
-      const requestsString = localStorage.getItem("borrowRequests");
-      const allRequests = requestsString ? JSON.parse(requestsString) : [];
+      const token = localStorage.getItem("authToken");
 
-      // Update status item dengan ID yang sesuai
-      const updatedRequests = allRequests.map((item) => {
-        if (item.id === id) {
-          return { ...item, status: newStatus };
-        }
-        return item;
+      await apiFetch(`/loans/${id}`, {
+        method: "PATCH",
+        token: token,
+        body: {
+          Status: newStatus,
+          status: newStatus,
+        },
       });
 
-      // Simpan kembali ke localStorage
-      localStorage.setItem("borrowRequests", JSON.stringify(updatedRequests));
-
-      // Picu event update & muat ulang state
-      window.dispatchEvent(new Event("storage"));
       loadData();
     } catch (error) {
-      console.error("Gagal mengupdate status:", error);
+      console.error("Gagal mengupdate status via API:", error);
+      alert(error.message || "Gagal memperbarui status transaksi!");
     }
   };
 
-  // Cegah render elemen DOM sebelum client-side mounting selesai
   if (!isMounted) {
     return (
       <div className="w-full min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 text-white pt-12 md:pt-16 pb-12 px-4 flex flex-col items-center justify-center font-sans">
@@ -109,67 +135,121 @@ export default function StatusPage() {
         </p>
       </div>
 
+      {errorMsg && (
+        <div className="max-w-4xl w-full mb-4 p-3 bg-red-500/80 backdrop-blur-md text-white text-xs rounded-xl text-center font-medium">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="max-w-4xl w-full space-y-4">
-        {rentals && rentals.length > 0 ? (
-          rentals.map((rental, index) => (
-            <div
-              key={rental.id || index}
-              className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-gray-800"
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full uppercase">
-                    {rental.groupName || rental.group || "K-POP"}
-                  </span>
-                  <span className="text-xs text-gray-500">ID: {rental.id}</span>
+        {isLoading ? (
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-10 text-center border border-white/20">
+            <p className="text-sm font-semibold text-white animate-pulse">
+              Memuat data riwayat dari server API...
+            </p>
+          </div>
+        ) : rentals && rentals.length > 0 ? (
+          rentals.map((rental, index) => {
+            const rentalId = rental.Id ?? rental.id ?? rental.ID ?? index;
+            const groupName =
+              rental.grup_nama ??
+              rental.groupName ??
+              rental.group_name ??
+              rental.Nama_grup ??
+              rental.group ??
+              "K-POP";
+            const itemName =
+              rental.Nama_unit ??
+              rental.nama_unit ??
+              rental.itemName ??
+              rental.item_name ??
+              rental.lightstick_name ??
+              rental.name ??
+              "Lightstick";
+            const username =
+              rental.username ??
+              rental.user_name ??
+              rental.Nama_peminjam ??
+              rental.user ??
+              "User";
+            const startDate =
+              rental.Tanggal_pinjam ??
+              rental.start_date ??
+              rental.startDate ??
+              rental.tanggal_pinjam ??
+              rental.date ??
+              "-";
+            const daysCount =
+              rental.Durasi ?? rental.durasi ?? rental.days ?? 1;
+            const eventName =
+              rental.Nama_event ??
+              rental.event_name ??
+              rental.eventName ??
+              rental.event ??
+              "";
+            const status =
+              rental.Status ??
+              rental.status ??
+              rental.Status_peminjaman ??
+              "PENDING";
+
+            return (
+              <div
+                key={rentalId}
+                className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-gray-800"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full uppercase">
+                      {groupName}
+                    </span>
+                    <span className="text-xs text-gray-500">ID Loan: {rentalId}</span>
+                  </div>
+
+                  <h2 className="font-bold text-gray-800 text-lg">
+                    {itemName}
+                  </h2>
+
+                  {isAdmin && (
+                    <p className="text-xs font-bold text-pink-600 mt-1">
+                      👤 Peminjam: {username}
+                    </p>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    📅 Tanggal Pinjam: {startDate} ({daysCount} Hari)
+                  </p>
+
+                  {eventName && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      🎟️ Event: {eventName}
+                    </p>
+                  )}
                 </div>
 
-                <h2 className="font-bold text-gray-800 text-lg">
-                  {rental.itemName || rental.item}
-                </h2>
+                <div className="flex items-center gap-3 self-end md:self-center">
+                  <Badge status={status} />
 
-                {isAdmin && (
-                  <p className="text-xs font-bold text-pink-600 mt-1">
-                    👤 Peminjam: {rental.username || rental.user || "User"}
-                  </p>
-                )}
-
-                <p className="text-xs text-gray-500 mt-1">
-                  📅 {rental.startDate ? `${rental.startDate} (${rental.days} Hari)` : rental.date}
-                </p>
-
-                {rental.eventName && (
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    🎟️ Event: {rental.eventName}
-                  </p>
-                )}
+                  {isAdmin && status.toUpperCase() === "PENDING" && (
+                    <div className="flex gap-2 ml-2">
+                      <button
+                        onClick={() => handleUpdateStatus(rentalId, "APPROVED")}
+                        className="bg-[#00C853] hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
+                      >
+                        Setujui
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(rentalId, "REJECTED")}
+                        className="bg-[#FFEBF0] hover:bg-pink-200 text-[#FF0055] text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
+                      >
+                        Tolak
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {/* BAGIAN AKSI ADMIN ATAU BADGE USER */}
-              <div className="flex items-center gap-3 self-end md:self-center">
-                <Badge status={rental.status || "Pending"} />
-
-                {/* Tombol Aksi khusus Admin jika status masih Pending */}
-                {isAdmin && (rental.status === "Pending" || rental.status === "PENDING") && (
-                  <div className="flex gap-2 ml-2">
-                    <button
-                      onClick={() => handleUpdateStatus(rental.id, "Approved")}
-                      className="bg-[#00C853] hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
-                    >
-                      Setujui
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(rental.id, "Rejected")}
-                      className="bg-[#FFEBF0] hover:bg-pink-200 text-[#FF0055] text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
-                    >
-                      Tolak
-                    </button>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-10 text-center border border-white/20">
             <p className="text-sm font-semibold text-white">

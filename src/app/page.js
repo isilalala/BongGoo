@@ -1,120 +1,197 @@
-// app/page.js
+// src/app/page.js
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Card from "../components/Card";
-import { groups, lightsticks } from "../data/dataLightstick";
-import Hero from "../components/Hero";
 import PanduanSewa from "../components/PanduanSewa";
+import Hero from "../components/Hero";
+import { apiFetch } from "../lib/api";
+
+const BACKEND_URL = "https://hmif.if.unram.ac.id";
 
 export default function HomePage() {
-  const [selectedGroupId, setSelectedGroupId] = useState(groups[0]?.id || null);
-  
-  // Ref untuk menandai bagian katalog lightstick di bawah
-  const lightstickSectionRef = useRef(null);
+  const [groups, setGroups] = useState([]);
+  const [lightsticks, setLightsticks] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSelectGroup = (groupId) => {
-    setSelectedGroupId(groupId);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
 
-    // Otomatis scroll ke bagian koleksi lightstick secara halus
-    setTimeout(() => {
-      lightstickSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 100);
-  };
+        const resGroups = await apiFetch("/groups");
+        const resLightsticks = await apiFetch("/lightsticks");
 
-  const activeGroup = groups.find((g) => g.id === selectedGroupId);
-  const filteredLightsticks = selectedGroupId
-    ? lightsticks.filter((item) => item.groupId === selectedGroupId)
-    : [];
+        const extractArray = (res) => {
+          if (!res) return [];
+          if (Array.isArray(res)) return res;
+          if (Array.isArray(res.data)) return res.data;
+          if (Array.isArray(res.result)) return res.result;
+          return [];
+        };
+
+        const apiGroups = extractArray(resGroups);
+        const apiLightsticks = extractArray(resLightsticks);
+
+        setGroups(apiGroups);
+        setLightsticks(apiLightsticks);
+      } catch (error) {
+        console.error("Gagal memuat API Beranda:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Filter lightstick berdasarkan grup yang dipilih
+  const filteredLightsticks = selectedGroup
+    ? lightsticks.filter((item) => {
+        const itemGroupId = item["Grup id"] ?? item.Grup_id ?? item.group_id ?? item.grup_id;
+        const itemGroupName = item.grup_nama ?? item.Nama_grup ?? item.group_name ?? item.nama_grup;
+
+        const selId = selectedGroup.Id ?? selectedGroup.id;
+        const selName = selectedGroup.Nama ?? selectedGroup.nama ?? selectedGroup.name;
+
+        return (
+          (itemGroupId !== undefined && selId !== undefined && String(itemGroupId) === String(selId)) ||
+          (itemGroupName && selName && String(itemGroupName).toLowerCase() === String(selName).toLowerCase())
+        );
+      })
+    : lightsticks;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 w-full">
-      {/* 1. Hero Banner */}
+    <main className="min-h-screen bg-slate-900 text-white font-sans pb-16">
       <Hero />
-      {/* ---------- TAMPILAN 1: PILIH GRUP ---------- */}
-      {!selectedGroupId ? (
-        <div>
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-black uppercase tracking-wider text-gray-400">
-              Pilih Grup K-Pop
-            </h2>
-            <p className="text-xs text-gray-400 mt-1">
-             Klik logo atau nama grup untuk melihat koleksi lightstick resmi yang tersedia
-            </p>
-          </div>
 
-        {/* Grid Logo Grup */}
-        {/* ... sisa kode grid kamu di sini ... */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white uppercase">
+            Pilih Grup K-Pop
+          </h2>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">
+            Klik logo atau nama grup untuk melihat koleksi lightstick resmi yang tersedia
+          </p>
         </div>
-    ) : (
-  /* ... tampilan detail grup / komponen selanjutnya ... */
-      null
-    )}
 
-      {/* Grid Logo Grup */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {groups.map((group) => {
-          const isSelected = selectedGroupId === group.id;
-          return (
-            <button
-              key={group.id}
-              type="button"
-              onClick={() => handleSelectGroup(group.id)}
-              className={`p-4 rounded-3xl border transition-all duration-200 flex flex-col items-center justify-center gap-3 cursor-pointer ${
-                isSelected
-                  ? "bg-pink-600 border-pink-500 shadow-lg shadow-pink-600/30 scale-105"
-                  : "bg-white border-gray-200 hover:border-pink-300 hover:shadow-md"
-              }`}
-            >
-              {/* Container Logo Grup */}
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center p-1">
-                <img
-                  src={group.logo}
-                  alt={group.name}
-                  className="w-full h-full object-contain rounded-xl"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
-              <span className={`font-bold text-sm ${isSelected ? "text-white" : "text-gray-800"}`}>
-                {group.name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+        {isLoading ? (
+          <div className="text-center py-10 text-pink-500 font-bold text-xs animate-pulse">
+            Memuat daftar grup & katalog K-Pop...
+          </div>
+        ) : (
+          <>
+            {/* Tombol Navigasi Grup */}
+            <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-12">
+              <button
+                onClick={() => setSelectedGroup(null)}
+                className={`px-5 py-2.5 rounded-full text-xs font-extrabold transition cursor-pointer ${
+                  selectedGroup === null
+                    ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30 scale-105"
+                    : "bg-slate-800 text-gray-300 hover:bg-slate-700"
+                }`}
+              >
+                ✨ Semua Grup
+              </button>
 
-      {/* Target Scroll & Daftar Lightstick */}
-      <div ref={lightstickSectionRef} className="scroll-mt-6">
-        {selectedGroupId && (
-          <div className="flex flex-col gap-4 mt-6">
-            <div className="flex items-center gap-2 border-gray-800 pb-3">
-              <h3 className="text-xl font-bold text-white">
-                Koleksi Lightstick {activeGroup?.name}
-              </h3>
+              {groups.map((group, idx) => {
+                const groupName = group.Nama || group.nama || group.name || "Grup";
+                const groupId = group.Id || group.id || idx;
+                const isSelected =
+                  (selectedGroup?.Id || selectedGroup?.id) === groupId ||
+                  (selectedGroup?.Nama || selectedGroup?.nama) === groupName;
+
+                const logoPath = group.Gambar || group.gambar || group.logo || group.image || "";
+                const logoUrl = logoPath.startsWith("http")
+                  ? logoPath
+                  : logoPath
+                  ? `${BACKEND_URL}${logoPath.startsWith("/") ? "" : "/"}${logoPath}`
+                  : "";
+
+                return (
+                  <button
+                    key={groupId}
+                    onClick={() => setSelectedGroup(group)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition cursor-pointer ${
+                      isSelected
+                        ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30 scale-105"
+                        : "bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700/50"
+                    }`}
+                  >
+                    {logoUrl && (
+                      <img
+                        src={logoUrl}
+                        alt={groupName}
+                        className="w-4 h-4 object-contain rounded-full"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    )}
+                    <span>{groupName}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {filteredLightsticks.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredLightsticks.map((ls) => (
-                  <Card key={ls.id} item={ls} groupName={activeGroup?.name} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 text-center">
-                <p className="text-sm text-gray-400">
-                  Belum ada unit lightstick yang tersedia untuk grup {activeGroup?.name}.
-                </p>
-              </div>
-            )}
-          </div>
+            {/* Katalog Lightstick */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-pink-400 mb-4 flex items-center gap-2">
+                📦{" "}
+                {selectedGroup
+                  ? `Koleksi ${
+                      selectedGroup.Nama || selectedGroup.nama || selectedGroup.name
+                    }`
+                  : "Semua Koleksi Lightstick"}
+              </h3>
+
+              {filteredLightsticks.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {filteredLightsticks.map((item, idx) => {
+                    const itemId = item.Id || item.id || idx;
+                    const groupName =
+                      item.grup_nama || item.Nama_grup || item.group_name || item.nama_grup || "K-POP";
+                    const itemName =
+                      item.Nama_unit || item.nama_unit || item.name || item.nama || "Lightstick";
+                    const price = item.Harga_sewa || item.harga_sewa || item.price || 0;
+
+                    const imagePath = item.Gambar || item.gambar || item.image || item.foto || "";
+                    let imageUrl = "/images/placeholder.png";
+
+                    if (imagePath) {
+                      if (imagePath.startsWith("http")) {
+                        imageUrl = imagePath;
+                      } else {
+                        imageUrl = `${BACKEND_URL}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+                      }
+                    }
+
+                    const cardItem = {
+                      id: itemId,
+                      name: itemName,
+                      price: price,
+                      image: imageUrl,
+                      status: item.Is_available || item.is_available || item.status === "TERSEDIA" ? "Tersedia" : "Disewa",
+                    };
+
+                    return (
+                      <Card key={itemId} item={cardItem} groupName={groupName} />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-slate-800/50 rounded-2xl p-8 text-center border border-slate-700">
+                  <p className="text-xs text-gray-400">
+                    Belum ada lightstick yang tersedia untuk grup ini.
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
         )}
-      </div>
+      </section>
+
+      {/* Komponen Panduan Sewa & Syarat Ketentuan */}
       <PanduanSewa />
-    </div>
+    </main>
   );
 }

@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { apiFetch } from "../lib/api"; // Helper API
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -56,20 +57,31 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("authToken");
 
-    setIsLoggedIn(false);
-    setUsername("");
-    setUserRole("user");
+    try {
+      // Panggil endpoint logout API jika ada (opsional)
+      if (token) {
+        await apiFetch("/logout", { method: "POST", token }).catch(() => {});
+      }
+    } catch (e) {
+      console.error("Logout API error:", e);
+    } finally {
+      // Bersihkan penyimpanan lokal
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("user");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
 
-    window.dispatchEvent(new Event("authChange"));
+      setIsLoggedIn(false);
+      setUsername("");
+      setUserRole("user");
 
-    router.push("/");
+      window.dispatchEvent(new Event("authChange"));
+      router.push("/");
+    }
   };
 
   return (
@@ -125,24 +137,16 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Menu Khusus ADMIN (Status & Approval) */}
+          {/* Menu Khusus ADMIN (Approval) */}
           {isLoggedIn && userRole === "admin" && (
             <>
-              <Link
-                href="/status"
-                className={`transition ${
-                  pathname === "/status" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
-                }`}
-              >
-                Approval
-              </Link>
               <Link
                 href="/approval"
                 className={`transition ${
                   pathname === "/approval" ? "text-pink-600 font-extrabold" : "hover:text-gray-800"
                 }`}
               >
-                Admin
+                Approval Admin
               </Link>
             </>
           )}
