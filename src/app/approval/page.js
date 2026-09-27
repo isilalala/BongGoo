@@ -77,7 +77,7 @@ export default function ApprovalPage() {
       const token = localStorage.getItem("authToken");
 
       await apiFetch(`/loans/${id}`, {
-        method: "PATCH",
+        method: "PUT",
         token: token,
         body: {
           Status: newStatus.toLowerCase(),
