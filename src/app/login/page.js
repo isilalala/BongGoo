@@ -32,8 +32,7 @@ export default function LoginPage() {
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
   const [registeredUserId, setRegisteredUserId] = useState("");
 
-  // --- HANDLER LOGIN VIA API ---
-  // --- HANDLER LOGIN VIA API (DISESUAIKAN UNTUK SWAGGER V3) ---
+  // --- HANDLER LOGIN VIA API (MEMBACA ROLE RESMI DATABASE) ---
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg("");
@@ -46,7 +45,6 @@ export default function LoginPage() {
     }
 
     try {
-      // Kirim objek payload yang fleksibel (mendukung email & username)
       const payload = {
         email: inputVal,
         username: inputVal,
@@ -61,19 +59,22 @@ export default function LoginPage() {
 
       console.log("Response Login dari API:", res);
 
-      // Jika berhasil (tidak ada flag error atau HTTP 401)
       if (res && !res.error && res.success !== false) {
         const token = res.token || res.data?.token || res.access_token || "auth-token";
         const userObj = res.user || res.data?.user || res.data || res;
 
+        // Ambil role ASLI dari database backend (Mendukung 'ADMIN' / 'admin')[cite: 16]
+        const rawRole = userObj.Role || userObj.role || userObj.Role_user || "";
+        let userRole = rawRole.toString().toLowerCase();
+
+        // Fallback jika API tidak mengembalikan field role
+        if (!userRole) {
+          userRole = inputVal.toLowerCase().includes("admin") ? "admin" : "user";
+        }
+
         // Ambil ID / UUID asli dari database
         const realUserId =
           userObj.Id || userObj.id || userObj.UUID || userObj.uuid || userObj.User_id;
-        const userRole = (
-          userObj.Role ||
-          userObj.role ||
-          (inputVal.toLowerCase().includes("admin") ? "admin" : "user")
-        ).toLowerCase();
 
         const cleanUserData = {
           id: realUserId,

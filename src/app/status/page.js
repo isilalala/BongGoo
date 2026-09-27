@@ -12,18 +12,19 @@ export default function StatusPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // FUNGSI UTAMA MUAT DATA LOANS DARI API BACKEND
   const loadData = async () => {
     try {
       setIsLoading(true);
       setErrorMsg("");
 
       const userRole = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
-      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken") || localStorage.getItem("token")
+          : null;
       const userString = typeof window !== "undefined" ? localStorage.getItem("user") : null;
       const currentUser = userString ? JSON.parse(userString) : {};
 
-      // Ekstrak ID user login dari berbagai kemungkinan nama field
       const currentUserId =
         currentUser.Id ||
         currentUser.id ||
@@ -35,17 +36,11 @@ export default function StatusPage() {
 
       const loggedInUsername = currentUser.username || currentUser.name || currentUser.Username || "";
 
-      // Cek peran Admin (Bisa 'ADMIN' atau 'admin')
       const checkAdmin =
         userRole?.toLowerCase() === "admin" ||
         loggedInUsername.toUpperCase().includes("ADMIN");
       setIsAdmin(checkAdmin);
 
-      // Fetch data transaksi peminjaman langsung dari endpoint /loans
-      const res = await apiFetch("/loans", { token });
-      console.log("Response Loans dari API:", res);
-
-      // Ekstraksi array data dari response API
       const extractArray = (data) => {
         if (!data) return [];
         if (Array.isArray(data)) return data;
@@ -55,30 +50,69 @@ export default function StatusPage() {
         return [];
       };
 
-      const allLoans = extractArray(res);
+      const [resLoans, resLightsticks] = await Promise.all([
+        apiFetch("/loans", { token }).catch(() => []),
+        apiFetch("/lightsticks", { token }).catch(() => []),
+      ]);
 
-      // Jika user biasa dan berhasil mengambil data ID, filter berdasarkan User_id
-      if (!checkAdmin && currentUserId) {
-        const userLoans = allLoans.filter((item) => {
-          const itemUserId =
-            item.User_id ??
-            item.user_id ??
-            item.userId ??
-            item.User_ID ??
-            item.id_user;
+      const rawLoans = extractArray(resLoans);
+      const rawLightsticks = extractArray(resLightsticks);
 
-          return (
-            itemUserId !== undefined &&
-            String(itemUserId).toLowerCase().trim() === String(currentUserId).toLowerCase().trim()
-          );
-        });
+      const lightstickMap = {};
+      rawLightsticks.forEach((ls) => {
+        const lsId = ls.Id ?? ls.id ?? ls.ID;
+        if (lsId !== undefined) {
+          lightstickMap[String(lsId)] = ls;
+        }
+      });
 
-        // Jika filter berhasil menemukan data pinjaman user, tampilkan data user
-        // Jika tidak ada hasil (misal ID di backend beda tipe/format), tampilkan seluruh data sementara agar tidak kosong
-        setRentals(userLoans.length > 0 ? userLoans : allLoans);
+      const mergedLoans = rawLoans.map((loan) => {
+        const lsId = loan.Lightstick_id ?? loan.lightstick_id ?? loan.lightstickId;
+        const matchedLs = lightstickMap[String(lsId)] || {};
+
+        return {
+          ...loan,
+          Nama_unit:
+            loan.Nama_unit ??
+            loan.nama_unit ??
+            loan.lightstick_name ??
+            matchedLs.Nama_unit ??
+            matchedLs.nama_unit ??
+            matchedLs.name ??
+            "Lightstick K-Pop",
+          grup_nama:
+            loan.grup_nama ??
+            loan.Nama_grup ??
+            loan.group_name ??
+            matchedLs.grup_nama ??
+            matchedLs.Nama_grup ??
+            matchedLs.group_name ??
+            "K-POP",
+        };
+      });
+
+      // Filter presisi khusus user biasa
+      if (!checkAdmin) {
+        if (currentUserId) {
+          const userLoans = mergedLoans.filter((item) => {
+            const itemUserId =
+              item.User_id ??
+              item.user_id ??
+              item.userId ??
+              item.User_ID ??
+              item.id_user;
+
+            return (
+              itemUserId !== undefined &&
+              String(itemUserId).toLowerCase().trim() === String(currentUserId).toLowerCase().trim()
+            );
+          });
+          setRentals(userLoans);
+        } else {
+          setRentals([]);
+        }
       } else {
-        // Jika Admin, tampilkan semua data peminjaman
-        setRentals(allLoans);
+        setRentals(mergedLoans);
       }
     } catch (error) {
       console.error("Gagal memuat data loans:", error);
@@ -93,10 +127,9 @@ export default function StatusPage() {
     loadData();
   }, []);
 
-  // HANDLER UBAH STATUS TRANSAKSI (KHUSUS ADMIN)
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("authToken") || localStorage.getItem("token");
 
       await apiFetch(`/loans/${id}`, {
         method: "PATCH",
