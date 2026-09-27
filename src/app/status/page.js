@@ -91,7 +91,7 @@ export default function StatusPage() {
         };
       });
 
-      // Filter presisi khusus user biasa
+     
       if (!checkAdmin) {
         if (currentUserId) {
           const userLoans = mergedLoans.filter((item) => {
@@ -123,8 +123,12 @@ export default function StatusPage() {
   };
 
   useEffect(() => {
-    setIsMounted(true);
-    loadData();
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      loadData();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleUpdateStatus = async (id, newStatus) => {
