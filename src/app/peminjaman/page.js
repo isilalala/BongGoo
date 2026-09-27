@@ -140,7 +140,6 @@ export default function PeminjamanPage() {
 
       console.log("📥 Response dari POST /loans:", res);
 
-      // Jika response mengandung flag error dari backend
       if (res && res.error) {
         throw new Error(res.message || "API menolak pengajuan peminjaman.");
       }
@@ -159,13 +158,17 @@ export default function PeminjamanPage() {
   };
 
   return (
-    <div className="w-full min-h-screen py-10 px-4 bg-cover bg-center flex items-center justify-center font-sans">
-      <div className="max-w-2xl w-full bg-white/95 backdrop-blur-md p-8 rounded-3xl border border-gray-200 shadow-2xl">
-        <h1 className="text-2xl font-bold mb-1 text-gray-800">
+    <div
+      className="relative w-full min-h-screen py-12 px-4 bg-cover bg-center bg-no-repeat flex items-center justify-center font-sans"
+      style={{ backgroundImage: "url('/fandom-kpop.jpg')" }} 
+    >
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      <div className="relative z-10 max-w-2xl w-full bg-white/95 backdrop-blur-md p-8 rounded-3xl border border-white/50 shadow-2xl">
+        <h1 className="text-2xl font-extrabold mb-1 text-gray-800">
           Form Pengajuan Peminjaman
         </h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Isi detail di bawah untuk mengajukan sewa lightstick.
+        <p className="text-sm text-gray-500 mb-6 font-medium">
+          Isi detail di bawah untuk mengajukan sewa lightstick kesukaanmu.
         </p>
 
         {errorMsg && (
@@ -175,7 +178,7 @@ export default function PeminjamanPage() {
         )}
 
         {isLoading ? (
-          <div className="text-center py-8 text-pink-600 font-bold text-xs animate-pulse">
+          <div className="text-center py-8 text-[#FF0055] font-bold text-xs animate-pulse">
             Memuat data...
           </div>
         ) : (
@@ -191,7 +194,7 @@ export default function PeminjamanPage() {
                   );
                   setSelectedLightstick(found);
                 }}
-                className="w-full border border-gray-300 rounded-xl p-3 text-xs font-medium text-gray-900 bg-slate-50/50"
+                className="w-full border border-gray-300 rounded-xl p-3 text-xs font-medium text-gray-900 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-[#FF0055]"
               >
                 {lightsticksList.map((item, idx) => {
                   const itemId = item.Id ?? item.id ?? item.ID ?? idx;
@@ -218,7 +221,7 @@ export default function PeminjamanPage() {
                   required
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl p-2.5 text-xs font-medium text-gray-900 bg-slate-50/50"
+                  className="w-full border border-gray-300 rounded-xl p-2.5 text-xs font-medium text-gray-900 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-[#FF0055]"
                 />
               </div>
               <div>
